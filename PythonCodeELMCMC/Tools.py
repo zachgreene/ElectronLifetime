@@ -252,8 +252,8 @@ def PercentileWithInf(Values, deviation):
     return np.percentile(NewValues, deviation_new, axis=0)
 
 
-
 # function to correct lifetime values found with pax_v6.2.0 and earlier
+# from https://xecluster.lngs.infn.it/dokuwiki/doku.php?id=greene:update_electron_lifetime_model
 def CorrectForPaxVersion(Lifetime, LifetimeErr):
     # found by plotting difference in inverse lifetimes
     LifetimeCorrectionFactor = 6.72734759404e-05
@@ -265,3 +265,53 @@ def CorrectForPaxVersion(Lifetime, LifetimeErr):
     TrueLifetimeErr = LifetimeErr/(1. - LifetimeCorrectionFactor*Lifetime) + Lifetime/(1 - LifetimeCorrectionFactor*Lifetime)**2*(LifetimeCorrectionFactorUncertainty*Lifetime + LifetimeCorrectionFactor*LifetimeErr)
 
     return (TrueLifetime, TrueLifetimeErr)
+
+
+
+def GetParameterPercentiles(samples, quantiles):
+    ParameterQuantiles = np.percentile(samples, q=quantiles, axis=0)
+    return ParameterQuantiles.T
+
+
+def FormatNumberForWiki(aNumbers, bExp=False, PowersOfTen=None):
+    aNumbers = np.asarray(aNumbers)
+    if bExp:
+        PowersOfTen = int(np.log10(np.abs(aNumbers[0])))
+        if PowersOfTen < 0:
+            PowersOfTen -= 1
+        aNumbers /= 10**PowersOfTen
+
+    sNumbers = ['%.2f' %(fNumber) for fNumber in aNumbers]
+
+    StringForWiki = '%s_{-%s}^{+%s}' %(sNumbers[0], sNumbers[1], sNumbers[2])
+    if bExp:
+        StringForWiki += '\ e%i' %(PowersOfTen)
+
+    return StringForWiki
+
+
+def PrintParameterQuantilesWiki(samples, quantiles, ParNames, ParDescs, ParUnits):
+    ParameterQuantiles = GetParameterPercentiles(samples, quantiles)
+    ParErrorLow = ParameterQuantiles[:, 1] - ParameterQuantiles[:, 0]
+    ParErrorUp = ParameterQuantiles[:, 2] - ParameterQuantiles[:, 1]
+
+    print('^  Parameter  ^  Description  ^  Units  ^  Best Fit Value  ^')
+
+    for i in range(samples.shape[1]):
+#        if 'Delta' in ParNames[i]:
+#            sParsToPrint = FormatNumberForWiki([ParameterQuantiles[i][1], ParErrorLow[i], ParErrorUp[i]], bExp=True)
+#        else:
+#            sParsToPrint = FormatNumberForWiki([ParameterQuantiles[i][1], ParErrorLow[i], ParErrorUp[i]])
+        if 'Delta I' in ParNames[i]:
+            StringForWiki = FormatNumberForWiki([ParameterQuantiles[i][1], ParErrorLow[i], ParErrorUp[i]], bExp=True)
+        else:
+            StringForWiki = FormatNumberForWiki([ParameterQuantiles[i][1], ParErrorLow[i], ParErrorUp[i]])
+        print('|  ' + ParNames[i] + '  |  ', end='')
+        print(ParDescs[i] + '  |  ', end='')
+        print(ParUnits[i] + '  |  $', end='')
+#        print(sParsToPrint[0] + '_{-', end='')
+#        print(sParsToPrint[1] + '}^{+', end='')
+        print(StringForWiki + '$  |')
+#        print(str(ParameterQuantiles[i][1]) + '_{-', end='')
+#        print(str(ParErrorLow[i]) + '}^{+', end='')
+#        print(str(ParErrorUp[i]) + '}  |')

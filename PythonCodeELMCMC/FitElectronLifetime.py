@@ -35,6 +35,8 @@ from numpy.linalg import inv
 
 import time
 
+
+
 StartingTimeFit = time.time()
 if len(sys.argv)<3:
     print("======== Syntax ==========")
@@ -51,6 +53,8 @@ if len(sys.argv)<3:
 HistorianFile = sys.argv[1]
 FitOutput = sys.argv[2]
 S1ExponentialConstant = 2040.6 # us. 
+
+print('Fitting Electron Lifetime between ' + FormPars.GetMinTimeStamp() + ' and ' + FormPars.GetMaxTimeStamp())
 
 # setting the parameters
 MinUnixTime = GetUnixTimeFromTimeStamp(FormPars.GetMinTimeStamp())
@@ -124,7 +128,8 @@ for line2 in lines2:
     value = float(contents[2])
     value_err = float(contents[3])
     #if was calculated using pax_v6.2.0 or younger
-    if unixtime < 1478000000 or (unixtime > 1484900000 and unixtime < 1486100000):
+#    if unixtime < 1478000000 or (unixtime > 1484900000 and unixtime < 1486100000):
+    if unixtime < 1478000000:
         value, value_err = CorrectForPaxVersion(value, value_err)
     RnUnixtimes.append(unixtime)
     RnUnixtimeErrors.append(unixtime_err)
@@ -171,15 +176,15 @@ def LnLike(x):
     start_time = time.time()
     pars, IfOutOfBoundary = FormPars.FormPars(x)
     if IfOutOfBoundary:
-        print("Out of boundary!")
+#        print("Out of boundary!")
         return -np.inf
     global pElectronLifetimeTrend
     pElectronLifetimeTrend.SetParameters(pars)
-    print("==== The parameters: =====")
-    print(pElectronLifetimeTrend.GetParameters())
+#    print("==== The parameters: =====")
+#    print(pElectronLifetimeTrend.GetParameters())
     LnL = LnLikeData()
     print(" LnL = "+str(LnL))
-    print("=====================")
+#    print("=====================")
     print("Takes: "+str(time.time()-start_time) + " sec")
     return LnL
 
@@ -205,23 +210,30 @@ if not PreWalkingPickleFilename=="NoneExist":
     IfPickleSuccessful = True
 elif not IfPickleSuccessful:
     for i in range(nwalkers):
-        p0.append([np.random.normal(a,b) for a, b in zip(x0, x0_steps)])
+#        p0.append([np.random.normal(a,b) for a, b in zip(x0, x0_steps)])
+        p0.append([np.random.uniform(a-2*b,a+2*b) for a, b in zip(x0, x0_steps)])
 import emcee
-sampler = emcee.EnsembleSampler(nwalkers, ndim, LnLike, threads=6)
+sampler = emcee.EnsembleSampler(nwalkers, ndim, LnLike, threads=28)
 sampler.run_mcmc(p0, niterations)
 
 # print(sampler.chain[:,:,:]) 
 # the sampler.chain is just a list of each (walker, iterator, dim) value
 
+
+# delete un-pickleable parts of sampler: lnprobfn and pool
+del sampler.__dict__['lnprobfn']
+del sampler.__dict__['pool']
+
 import pickle
 
 OutputData = {}
 OutputData['prefilename']=PreWalkingPickleFilename
-OutputData['ndim'] = ndim
-OutputData['nwalkers'] = nwalkers
-OutputData['niterations'] = niterations
-OutputData['chain'] = sampler.chain
-OutputData['acceptance_fraction'] = sampler.acceptance_fraction
+#OutputData['ndim'] = ndim
+#OutputData['nwalkers'] = nwalkers
+#OutputData['niterations'] = niterations
+#OutputData['chain'] = sampler.chain
+#OutputData['acceptance_fraction'] = sampler.acceptance_fraction
+OutputData['sampler'] = sampler
 pickle.dump(OutputData, open(FitOutput, 'wb'))
 
 print(str((time.time() - StartingTimeFit)/3600.))
