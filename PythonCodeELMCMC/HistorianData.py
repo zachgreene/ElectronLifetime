@@ -205,7 +205,17 @@ class MyHistorianData:
         previousValue = 15. #default
         for unixtime, value in zip(UnixTimes, Values):
             if unixtime < 1484768100:
-                if value<self.ProbableCathodeRange1[0] or value>self.ProbableCathodeRange1[1]:
+                if unixtime >  1473956519 and unixtime < 1473997763:
+                    value = 15.
+                    ReturnValues.append(value)
+                    previousValue = value
+                    continue
+                if unixtime >  1475301507 and unixtime < 1475391507:
+                    value = 12.
+                    ReturnValues.append(value)
+                    previousValue = value
+                    continue
+                elif value<self.ProbableCathodeRange1[0] or value>self.ProbableCathodeRange1[1]:
                     ReturnValues.append(previousValue)
                     continue
                 ReturnValues.append( value )

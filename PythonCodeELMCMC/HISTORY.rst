@@ -1,3 +1,4 @@
+
 from Qing Lin
 
 @ 2016-07-11
@@ -74,4 +75,8 @@ Changed number of parametsr from 14 to 15 by including a new getter defficiency 
 
 
 @ 2017/4/3
-Removed getter defficiency and change in LXe outgassing rate, and put in new impurity change at 1485451100.  Later changed new impurity time to 1485951100.
+Removed getter defficiency and change in LXe outgassing rate, and put in new impurity change at 1485451100.
+
+
+
+TODO: look at drop in late November, decrease LXe outgassing during PUR upgrade, change (not sure if is increase or decrease) GXe outgassing during GXe only phase.

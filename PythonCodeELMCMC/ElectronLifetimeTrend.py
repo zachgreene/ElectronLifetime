@@ -14,7 +14,7 @@ class MyElectronLifetimeTrend:
         # need 1 par3 for electron lifetime trend
         # need 8 pars for impurity trend
         # 2016-12-12 need either 13 or 14 parss
-        if not (len(pars)==15 or len(pars)==16 or len(pars)==17):
+        if not (len(pars)==15 or len(pars)==16 or len(pars)==17 or len(pars)==18):
             raise ValueError("Parameters for electron lifetime are not enough!")
         pars_electronlifetime = pars[0:1]
         pars_impurity = pars[1:]
@@ -30,7 +30,7 @@ class MyElectronLifetimeTrend:
         return
 
     def SetParameters(self, pars):
-        if not (len(pars)==15 or len(pars)==16 or len(pars)==17):
+        if not (len(pars)==15 or len(pars)==16 or len(pars)==17 or len(pars)==18):
             raise ValueError("Parameters are not enough for electron lifetime!")
         self.ImpurityAttachingRate = np.abs(pars[0])
         if self.ImpurityAttachingRate<1e-40:

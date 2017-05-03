@@ -179,14 +179,19 @@ LastPointUnixTime = UnixTimes[len(UnixTimes)-1]
 #############################
 import pickle
 MCMCResults = pickle.load(open(FitResultInput, 'rb'))
-ndim = MCMCResults['ndim']
-nwalkers = MCMCResults['nwalkers']
-niterations = MCMCResults['niterations']
+sampler = MCMCResults['sampler']
+#ndim = MCMCResults['ndim']
+#nwalkers = MCMCResults['nwalkers']
+#niterations = MCMCResults['niterations']
+ndim = sampler.__dict__['dim']
+niterations = sampler.__dict__['iterations']
+nwalkers = sampler.__dict__['k']
 print(ndim, nwalkers, niterations)
 
 # Cutting Burn-In and unreasonable region
 # the value shall already be from "PlotElectronLifetime.py"
-samples_cut = GetBurnInCutoffSamples(MCMCResults['chain'], int(BurnInCutOff))
+#samples_cut = GetBurnInCutoffSamples(MCMCResults['chain'], int(BurnInCutOff))
+samples_cut = GetBurnInCutoffSamples(sampler.__dict__['_chain'], int(BurnInCutOff))
 
 #####################################
 ## Calculate the best fit from MCMC results
@@ -205,6 +210,16 @@ pElectronLifetimeTrend = MyElectronLifetimeTrend(HistorianFile, MinUnixTime, Max
 
 # get the graphs 
 UnixTimes = np.linspace(MinUnixTime, MaxUnixTime, NumOfInterpretation)
+# include times of discontinuity
+ImpactfulUnixtimes = FormPars.GetImpactfulUnixtimes()
+for ImpactfulUnixtime in ImpactfulUnixtimes:
+	if ImpactfulUnixtime-1 not in UnixTimes:
+		UnixTimes = np.insert(UnixTimes, len(UnixTimes[UnixTimes < ImpactfulUnixtime-1]), ImpactfulUnixtime-1)
+	if ImpactfulUnixtime not in UnixTimes:
+		UnixTimes = np.insert(UnixTimes, len(UnixTimes[UnixTimes < ImpactfulUnixtime]), ImpactfulUnixtime)
+	if ImpactfulUnixtime+1 not in UnixTimes:
+		UnixTimes = np.insert(UnixTimes, len(UnixTimes[UnixTimes < ImpactfulUnixtime+1]), ImpactfulUnixtime+1)
+
 Taus = []
 gI = TGraph()
 gTau = TGraph()

@@ -257,7 +257,8 @@ def PercentileWithInf(Values, deviation):
 def CorrectForPaxVersion(Lifetime, LifetimeErr):
     # found by plotting difference in inverse lifetimes
     LifetimeCorrectionFactor = 6.72734759404e-05
-    LifetimeCorrectionFactorUncertainty = 9.46946770525e-07
+#    LifetimeCorrectionFactorUncertainty = 9.46946770525e-07
+    LifetimeCorrectionFactorUncertainty = 1.56664061785e-06
 
     #idea is 1/tau_v6.2.0 - 1/tau_v6.4.0 = const_eff
     TrueLifetime = Lifetime/(1 - LifetimeCorrectionFactor*Lifetime)

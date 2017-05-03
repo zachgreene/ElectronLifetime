@@ -79,7 +79,8 @@ for i, line3 in enumerate(lines3):
     value = float(contents[2])
     value_err = float(contents[3])
     #if was calculated using pax_v6.2.0 or younger
-    if unixtime < 1478000000 or (unixtime > 1484900000 and unixtime < 1486100000):
+#    if unixtime < 1478000000 or (unixtime > 1484900000 and unixtime < 1486100000):
+    if unixtime < 1478000000:
         print(unixtime, value, value_err, *CorrectForPaxVersion(value, value_err))
         value, value_err = CorrectForPaxVersion(value, value_err)
     RnUnixtimes.append(unixtime)
@@ -172,8 +173,8 @@ for unixtime, elife, elife_err in zip(UnixTimes, ELifeValues, ELifeValueErrors):
     ELifeValueDeviations.append(residual / prediction *100.)
     ELifeValueDeviationErrors.append( elife_err / prediction * 100.)
 for unixtime, elife,elife_err in zip(RnUnixtimes, RnELifeValues, RnELifeValueErrors):
-    if unixtime > 1484761892:
-        continue
+#    if unixtime > 1484761892:
+#        continue
     prediction = PredictionInterpolator(unixtime)
     residual = elife - prediction
     RnELifeValueDeviations.append(residual / prediction * 100.)
@@ -363,7 +364,7 @@ ax.text( # Earthquake @ 01/18/2017
             )
 ax.text( # Gas-only circulation
             dt.datetime.fromtimestamp(1471880000-5.*3600.*24.), 
-            575., 
+            675., 
             'Gas-only circulation',
             color='coral',
             size=22.,
@@ -372,7 +373,7 @@ ax.text( # Gas-only circulation
 ax.text(dt.datetime.fromtimestamp(1471880000), 505, "20 SLPM", color='coral', size=22.)
 ax.text( # PUR upgrade
             dt.datetime.fromtimestamp(1475180000-5.*3600.*24.), 
-            560., 
+            660., 
             'PUR upgrade',
             color='m',
             size=22.,
@@ -382,16 +383,16 @@ ax.text( # PUR upgrade
 
 
 # text the flow rate
-ax.text( dt.datetime.fromtimestamp(1464000000), 480+40., "$\sim$ 40 SLPM", size=20.,color='k')
-ax.text( dt.datetime.fromtimestamp(1466500000), 480+40, "$\sim$ 55 SLPM", size=20.,color='k')
-ax.text( dt.datetime.fromtimestamp(1469500000), 480+40, "45 - 50 SLPM", size=20.,color='k')
-ax.text( dt.datetime.fromtimestamp(1473500000), 480+40, "$\sim$ 40 SLPM", size=20.,color='k')
-ax.text( dt.datetime.fromtimestamp(1475700000), 480+40, "$\sim$ 54 SLPM", size=20.,color='k')
+ax.text( dt.datetime.fromtimestamp(1464000000), 580+40., "$\sim$ 40 SLPM", size=20.,color='k')
+ax.text( dt.datetime.fromtimestamp(1466500000), 580+40, "$\sim$ 55 SLPM", size=20.,color='k')
+ax.text( dt.datetime.fromtimestamp(1469500000), 580+40, "45 - 50 SLPM", size=20.,color='k')
+ax.text( dt.datetime.fromtimestamp(1473500000), 580+40, "$\sim$ 40 SLPM", size=20.,color='k')
+ax.text( dt.datetime.fromtimestamp(1475700000), 580+40, "$\sim$ 54 SLPM", size=20.,color='k')
 
 
 ax.set_xlim([XLimLow, XLimUp])
 ax.set_ylim([0, 650])
-#ax.legend(loc = 'lower right',prop={'size':20})
+ax.legend(loc = 'lower right',prop={'size':20})
 ax.set_xlabel('Date', fontsize=30)
 ax.set_ylabel('Electron lifetime $[\\mu s]$', fontsize=30)
 ax.tick_params(axis='x', labelsize=30)
@@ -431,20 +432,20 @@ ax2.text(
               )
 
 
-#ax2.errorbar(Dates, ELifeValueDeviations, xerr=[DateErrorLowers,DateErrorUppers], yerr=[ELifeValueDeviationErrors,ELifeValueDeviationErrors], fmt='o', color='k')
-#ax2.errorbar(RnDates, RnELifeValueDeviations,  xerr = [RnDateErrorLowers,RnDateErrorUppers], yerr=[RnELifeValueDeviationErrors,RnELifeValueDeviationErrors], fmt='o', color='deeppink')
 ax2.errorbar(Dates, ELifeValueDeviations, xerr=[DateErrorLowers,DateErrorUppers], yerr=[ELifeValueDeviationErrors,ELifeValueDeviationErrors], fmt='o', color='k')
-RnTempDates = []
-RnTempDatesUp = []
-RnTempDatesLow = []
-for RnDate, RnDateErrorLower, RnDateErrorUpper, RnUnixtime in zip(RnDates, RnDateErrorLowers, RnDateErrorUppers, RnUnixtimes):
-    if RnUnixtime > 1484761892:
-        continue
-    RnTempDates.append(RnDate)
-    RnTempDatesUp.append(RnDateErrorUpper)
-    RnTempDatesLow.append(RnDateErrorLower)
+ax2.errorbar(RnDates, RnELifeValueDeviations,  xerr = [RnDateErrorLowers,RnDateErrorUppers], yerr=[RnELifeValueDeviationErrors,RnELifeValueDeviationErrors], fmt='o', color='deeppink')
+#ax2.errorbar(Dates, ELifeValueDeviations, xerr=[DateErrorLowers,DateErrorUppers], yerr=[ELifeValueDeviationErrors,ELifeValueDeviationErrors], fmt='o', color='k')
+#RnTempDates = []
+#RnTempDatesUp = []
+#RnTempDatesLow = []
+#for RnDate, RnDateErrorLower, RnDateErrorUpper, RnUnixtime in zip(RnDates, RnDateErrorLowers, RnDateErrorUppers, RnUnixtimes):
+#    if RnUnixtime > 1484761892:
+#        continue
+#    RnTempDates.append(RnDate)
+#    RnTempDatesUp.append(RnDateErrorUpper)
+#    RnTempDatesLow.append(RnDateErrorLower)
 
-ax2.errorbar(RnTempDates, RnELifeValueDeviations,  xerr = [RnTempDatesLow, RnTempDatesUp], yerr=[RnELifeValueDeviationErrors,RnELifeValueDeviationErrors], fmt='o', color='deeppink')
+#ax2.errorbar(RnTempDates, RnELifeValueDeviations,  xerr = [RnTempDatesLow, RnTempDatesUp], yerr=[RnELifeValueDeviationErrors,RnELifeValueDeviationErrors], fmt='o', color='deeppink')
 
 
 ax.set_xlim([XLimLow, XLimUp])

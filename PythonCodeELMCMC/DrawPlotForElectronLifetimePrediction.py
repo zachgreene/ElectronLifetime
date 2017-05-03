@@ -79,7 +79,8 @@ for i, line3 in enumerate(lines3):
     value = float(contents[2])
     value_err = float(contents[3])
     #if was calculated using pax_v6.2.0 or younger
-    if unixtime < 1478000000 or (unixtime > 1484900000 and unixtime < 1486100000):
+#    if unixtime < 1478000000 or (unixtime > 1484900000 and unixtime < 1486100000):
+    if unixtime < 1478000000:
         print(unixtime, value, value_err, *CorrectForPaxVersion(value, value_err))
         value, value_err = CorrectForPaxVersion(value, value_err)
     RnUnixtimes.append(unixtime)
@@ -120,6 +121,59 @@ for i, line4 in enumerate(lines4):
     KrUnixtimeErrors.append(0)
     KrELifeValues.append(value)
     KrELifeValueErrors.append(value_err)
+
+
+####################################
+# Get Xe129m elifes 
+####################################
+
+
+#Xe129mELifeDataFile = '/home/zgreene/xenon1t/ElectronLifetime/FitData/ElectronLifetimeDataWithXe129m.txt'
+Xe129mELifeDataFile = '/home/zgreene/xenon1t/ElectronLifetime/FitData/a.txt'
+Xe131mELifeDataFile = '/home/zgreene/xenon1t/ElectronLifetime/FitData/ElectronLifetimeDataWithXe131m.txt'
+fin5 = open(Xe129mELifeDataFile)
+lines5 = fin5.readlines()
+fin5.close()
+
+Xe129mUnixtimes = []
+Xe129mUnixtimeErrors = []
+Xe129mELifeValues = []
+Xe129mELifeValueErrors = []
+
+for i, line5 in enumerate(lines5):
+    contents = line5[:-1].split("\t\t")
+    unixtime = float(contents[0])
+    unixtime_err = float(contents[1])
+    value = float(contents[2])
+    value_err = float(contents[3])
+    Xe129mUnixtimes.append(unixtime)
+    Xe129mUnixtimeErrors.append(unixtime_err)
+    Xe129mELifeValues.append(value)
+    Xe129mELifeValueErrors.append(value_err)
+
+
+####################################
+# Get Xe131m elifes 
+####################################
+fin6 = open(Xe131mELifeDataFile)
+lines6 = fin6.readlines()
+fin6.close()
+
+Xe131mUnixtimes = []
+Xe131mUnixtimeErrors = []
+Xe131mELifeValues = []
+Xe131mELifeValueErrors = []
+
+for i, line6 in enumerate(lines6):
+    contents = line6[:-1].split("\t\t")
+    unixtime = float(contents[0])
+    unixtime_err = float(contents[1])
+    value = float(contents[2])
+    value_err = float(contents[3])
+    Xe131mUnixtimes.append(unixtime)
+    Xe131mUnixtimeErrors.append(unixtime_err)
+    Xe131mELifeValues.append(value)
+    Xe131mELifeValueErrors.append(value_err)
 
 #######################################
 ## Get the prediction lists
@@ -194,6 +248,8 @@ ScienceRunEndUnixtime = 1484731512
 Dates = [dt.datetime.fromtimestamp(ts) for ts in UnixTimes]
 RnDates = [dt.datetime.fromtimestamp(ts) for ts in RnUnixtimes]
 KrDates = [dt.datetime.fromtimestamp(ts) for ts in KrUnixtimes]
+Xe129mDates = [dt.datetime.fromtimestamp(ts) for ts in Xe129mUnixtimes]
+Xe131mDates = [dt.datetime.fromtimestamp(ts) for ts in Xe131mUnixtimes]
 DateErrorLowers = []
 DateErrorUppers = []
 for ts, ts_err in zip(UnixTimes, UnixTimeErrors):
@@ -210,6 +266,22 @@ for ts, ts_err in zip(RnUnixtimes, RnUnixtimeErrors):
     date_err_upper = dt.datetime.fromtimestamp(ts + ts_err) - date
     RnDateErrorLowers.append( date_err_lower )
     RnDateErrorUppers.append( date_err_upper )
+Xe129mDateErrorLowers = []
+Xe129mDateErrorUppers = []
+for ts, ts_err in zip(Xe129mUnixtimes, Xe129mUnixtimeErrors):
+    date = dt.datetime.fromtimestamp(ts)
+    date_err_lower = date - dt.datetime.fromtimestamp(ts - ts_err)
+    date_err_upper = dt.datetime.fromtimestamp(ts + ts_err) - date
+    Xe129mDateErrorLowers.append( date_err_lower )
+    Xe129mDateErrorUppers.append( date_err_upper )
+Xe131mDateErrorLowers = []
+Xe131mDateErrorUppers = []
+for ts, ts_err in zip(Xe131mUnixtimes, Xe131mUnixtimeErrors):
+    date = dt.datetime.fromtimestamp(ts)
+    date_err_lower = date - dt.datetime.fromtimestamp(ts - ts_err)
+    date_err_upper = dt.datetime.fromtimestamp(ts + ts_err) - date
+    Xe131mDateErrorLowers.append( date_err_lower )
+    Xe131mDateErrorUppers.append( date_err_upper )
 Dates2 = [dt.datetime.fromtimestamp(ts) for ts in UnixTimes2]
 
 
@@ -231,9 +303,11 @@ ax = plt.subplot(gs1[0:3,:])
 
 xfmt = md.DateFormatter('%Y-%m-%d')
 ax.xaxis.set_major_formatter(xfmt)
-ax.errorbar(Dates, ELifeValues, xerr=[DateErrorLowers,DateErrorUppers], yerr=[ELifeValueErrors,ELifeValueErrors], fmt='o', color='k', label="electron lifetime data points (S2/S1 method)")
+#ax.errorbar(Dates, ELifeValues, xerr=[DateErrorLowers,DateErrorUppers], yerr=[ELifeValueErrors,ELifeValueErrors], fmt='o', color='k', label="electron lifetime data points (S2/S1 method)")
 ax.errorbar(RnDates, RnELifeValues,  xerr = [RnDateErrorLowers,RnDateErrorUppers], yerr=[RnELifeValueErrors,RnELifeValueErrors], fmt='o', color='deeppink', label="electron lifetime data points (from Rn analysis)")
 ax.errorbar(KrDates, KrELifeValues, yerr = [KrELifeValueErrors, KrELifeValueErrors], fmt = 'o', color = 'g', label = "electron lifetime data points(from Kr83m analysis)")
+ax.errorbar(Xe129mDates, Xe129mELifeValues,  xerr = [Xe129mDateErrorLowers,Xe129mDateErrorUppers], yerr=[Xe129mELifeValueErrors,Xe129mELifeValueErrors], fmt='o', color='darkmagenta', label="electron lifetime data points (from Xe129m analysis)")
+ax.errorbar(Xe131mDates, Xe131mELifeValues,  xerr = [Xe131mDateErrorLowers,Xe131mDateErrorUppers], yerr=[Xe131mELifeValueErrors,Xe131mELifeValueErrors], fmt='o', color='darkorange', label="electron lifetime data points (from Xe131m analysis)")
 ax.plot(
             Dates2,
             PredictedELifes,
@@ -353,10 +427,12 @@ ax.text( dt.datetime.fromtimestamp(1469500000), 580+40, "45 - 50 SLPM", size=20.
 ax.text( dt.datetime.fromtimestamp(1473500000), 580+40, "$\sim$ 40 SLPM", size=20.,color='k')
 ax.text( dt.datetime.fromtimestamp(1475700000), 580+40, "$\sim$ 54 SLPM", size=20.,color='k')
 
-
+#ax.grid(True)
+#XLimLow = datetime.datetime(2017, 3, 8, 0, 0)
+#XLimUp = datetime.datetime(2017, 4, 28, 0, 0)
 ax.set_xlim([XLimLow, XLimUp])
 ax.set_ylim([0, 650])
-#ax.legend(loc = 'lower right',prop={'size':20})
+ax.legend(loc = 'lower right',prop={'size':20})
 ax.set_xlabel('Date', fontsize=30)
 ax.set_ylabel('Electron lifetime $[\\mu s]$', fontsize=30)
 ax.tick_params(axis='x', labelsize=30)
