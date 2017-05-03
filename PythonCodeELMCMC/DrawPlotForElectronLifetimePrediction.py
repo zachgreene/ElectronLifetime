@@ -8,6 +8,7 @@ import datetime as dt
 import time
 import pickle
 import sys
+from Tools import *
 
 if len(sys.argv)<2:
     print("======== Syntax: =======")
@@ -77,12 +78,26 @@ for i, line3 in enumerate(lines3):
     unixtime_err = float(contents[1])
     value = float(contents[2])
     value_err = float(contents[3])
+    #if was calculated using pax_v6.2.0 or younger
+    if unixtime < 1478000000 or (unixtime > 1484900000 and unixtime < 1486100000):
+        print(unixtime, value, value_err, *CorrectForPaxVersion(value, value_err))
+        value, value_err = CorrectForPaxVersion(value, value_err)
     RnUnixtimes.append(unixtime)
     RnUnixtimeErrors.append(unixtime_err)
     RnELifeValues.append(value)
     RnELifeValueErrors.append(value_err)
 
+LastPointUnixTime = RnUnixtimes[-1]
 
+CutID = 0
+for i, unixtime in enumerate(UnixTimes):
+    if unixtime>RnUnixtimes[0]:
+        CutID = i
+        break
+UnixTimes = UnixTimes[:CutID]
+UnixTimeErrors = UnixTimeErrors[:CutID]
+ELifeValues = ELifeValues[:CutID]
+ELifeValueErrors = ELifeValueErrors[:CutID]
 ####################################
 # Get Kr83m elifes 
 ####################################
@@ -123,6 +138,8 @@ UnixTimes2 = []
 PredictedELifes = []
 PredictedELifeLowers = []
 PredictedELifeUppers = []
+PredictedELifeLowerErrors = []
+PredictedELifeUpperErrors = []
 for i, line in enumerate(lines2):
     contents = line[:-1].split("\t\t")
     unixtime = float(contents[0])
@@ -135,6 +152,39 @@ for i, line in enumerate(lines2):
     PredictedELifes.append( SimpleCorrection(elife, FitterUsedS1ExponentialConstant, S1ExponentialConstant) )
     PredictedELifeLowers.append(SimpleCorrection(elife_lower, FitterUsedS1ExponentialConstant, S1ExponentialConstant) )
     PredictedELifeUppers.append(SimpleCorrection(elife_upper, FitterUsedS1ExponentialConstant, S1ExponentialConstant) )
+    PredictedELifeLowerErrors.append( (elife_lower - elife)/elife)
+    PredictedELifeUpperErrors.append((elife_upper - elife)/elife)
+
+from scipy.interpolate import interp1d
+
+PredictionInterpolator = interp1d(UnixTimes2, PredictedELifes)
+
+###################################
+## Get the residual of the data points
+###################################
+ELifeValueDeviations = []
+ELifeValueDeviationErrors = []
+RnELifeValueDeviations = []
+RnELifeValueDeviationErrors = []
+for unixtime, elife, elife_err in zip(UnixTimes, ELifeValues, ELifeValueErrors):
+    prediction = PredictionInterpolator(unixtime)
+    residual = elife - prediction
+    ELifeValueDeviations.append(residual / prediction *100.)
+    ELifeValueDeviationErrors.append( elife_err / prediction * 100.)
+for unixtime, elife,elife_err in zip(RnUnixtimes, RnELifeValues, RnELifeValueErrors):
+    if unixtime > 1484761892:
+        continue
+    prediction = PredictionInterpolator(unixtime)
+    residual = elife - prediction
+    RnELifeValueDeviations.append(residual / prediction * 100.)
+    RnELifeValueDeviationErrors.append( elife_err / prediction * 100.)
+
+###################################
+## Calculate the uncertainties in the first science run
+###################################
+ScienceRunStartUnixtime = 1479772800
+ScienceRunEndUnixtime = 1484731512
+
 
 ###################################
 ## convert unixtimes to dates
@@ -166,12 +216,22 @@ Dates2 = [dt.datetime.fromtimestamp(ts) for ts in UnixTimes2]
 ##############################
 ## Draw plot
 ##############################
-fig, ax = plt.subplots(1)
-fig.set_size_inches(25, 14., forward=True)
+from matplotlib import gridspec
+
+XLimLow = dt.datetime.fromtimestamp(FirstPointUnixTime)
+XLimUp = dt.datetime.fromtimestamp(LastPointUnixTime+DaysAfterLastPoint*3600.*24.)
+
+
+fig = plt.figure(figsize=(25.0, 21.0))
+#plt.rc('text', usetex=True)
+#plt.rc('font', family='serif')
+
+gs1 = gridspec.GridSpec(3,1)
+ax = plt.subplot(gs1[0:3,:])
 
 xfmt = md.DateFormatter('%Y-%m-%d')
 ax.xaxis.set_major_formatter(xfmt)
-#ax.errorbar(Dates, ELifeValues, xerr=[DateErrorLowers,DateErrorUppers], yerr=[ELifeValueErrors,ELifeValueErrors], fmt='o', color='k', label="electron lifetime data points (S2/S1 method)")
+ax.errorbar(Dates, ELifeValues, xerr=[DateErrorLowers,DateErrorUppers], yerr=[ELifeValueErrors,ELifeValueErrors], fmt='o', color='k', label="electron lifetime data points (S2/S1 method)")
 ax.errorbar(RnDates, RnELifeValues,  xerr = [RnDateErrorLowers,RnDateErrorUppers], yerr=[RnELifeValueErrors,RnELifeValueErrors], fmt='o', color='deeppink', label="electron lifetime data points (from Rn analysis)")
 ax.errorbar(KrDates, KrELifeValues, yerr = [KrELifeValueErrors, KrELifeValueErrors], fmt = 'o', color = 'g', label = "electron lifetime data points(from Kr83m analysis)")
 ax.plot(
@@ -189,39 +249,26 @@ ax.fill_between(
                          label='$\pm 1 \sigma$ C.L. region',
                          alpha=0.5,
                         )
-ax.fill_between([dt.datetime.fromtimestamp(1479849480), dt.datetime.fromtimestamp(1484731500)],[0, 0], [1000, 1000], color='coral', alpha=0.5)
+
+
 # plot the vertical lines for system change
 ax.axvline( x=dt.datetime.fromtimestamp(1465937520), # first power outage
                     ymin = 0,
-                    ymax = 550, 
+                    ymax = 650, 
                     linestyle = "--",
                     linewidth=3,
                     color='k',
                    )
 ax.axvline( x=dt.datetime.fromtimestamp(1468597800), # LN2 test. PTR1 warm-up
                     ymin = 0,
-                    ymax = 550, 
+                    ymax = 650, 
                     linestyle = "--",
                     linewidth=3,
                     color='k',
                    )
 ax.axvline( x=dt.datetime.fromtimestamp(1484731512), # earthquake
                     ymin = 0,
-                    ymax = 550, 
-                    linestyle = "--",
-                    linewidth=3,
-                    color='k',
-                   )
-ax.axvline( x=dt.datetime.fromtimestamp(1482262083), # Rn distillation started
-                    ymin = 0,
-                    ymax = 550, 
-                    linestyle = "--",
-                    linewidth=3,
-                    color='b',
-                   )
-ax.axvline( x=dt.datetime.fromtimestamp(1482143763), # Rn calibration started
-                    ymin = 0,
-                    ymax = 550, 
+                    ymax = 650, 
                     linestyle = "--",
                     linewidth=3,
                     color='k',
@@ -235,7 +282,7 @@ Xs = [
           dt.datetime.fromtimestamp(1472800000)
          ]
 YLs = [0, 0]
-YUs = [550, 550]
+YUs = [650, 650]
 ax.fill_between(Xs, YLs, YUs, color='coral', alpha=0.7)
 Xs = [
           dt.datetime.fromtimestamp(1475180000),
@@ -243,6 +290,14 @@ Xs = [
          ]
 ax.fill_between(Xs, YLs, YUs, color='m', alpha=0.3)
 
+
+Xs = [
+          dt.datetime.fromtimestamp(ScienceRunStartUnixtime),
+          dt.datetime.fromtimestamp(ScienceRunEndUnixtime)
+         ]
+YLs = [0, 0]
+YUs = [650, 650]
+ax.fill_between(Xs, YLs, YUs, color='coral', alpha=0.5)
 
 
 
@@ -290,6 +345,7 @@ ax.text( # PUR upgrade
             #rotation='vertical',
             )
 
+
 # text the flow rate
 ax.text( dt.datetime.fromtimestamp(1464000000), 480+40., "$\sim$ 40 SLPM", size=20.,color='k')
 ax.text( dt.datetime.fromtimestamp(1466500000), 480+40, "$\sim$ 55 SLPM", size=20.,color='k')
@@ -298,24 +354,22 @@ ax.text( dt.datetime.fromtimestamp(1473500000), 480+40, "$\sim$ 40 SLPM", size=2
 ax.text( dt.datetime.fromtimestamp(1475700000), 480+40, "$\sim$ 54 SLPM", size=20.,color='k')
 
 
-#ax.set_xlim([
-#                     dt.datetime.fromtimestamp(FirstPointUnixTime),
-#                     dt.datetime.fromtimestamp(LastPointUnixTime+DaysAfterLastPoint*3600.*24.)
-#                    ])
-ax.set_xlim([
-                     dt.datetime.fromtimestamp(1479340800+24*3600),
-                     dt.datetime.fromtimestamp(1485129600)
-                    ])
-ax.set_ylim([300, 550])
-ax.legend(loc = 'lower right',prop={'size':20})
+ax.set_xlim([XLimLow, XLimUp])
+ax.set_ylim([0, 650])
+#ax.legend(loc = 'lower right',prop={'size':20})
 ax.set_xlabel('Date', fontsize=30)
-ax.set_ylabel('Electron lifetime [$\\mu s$]', fontsize=30)
+ax.set_ylabel('Electron lifetime $[\\mu s]$', fontsize=30)
 ax.tick_params(axis='x', labelsize=30)
 ax.tick_params(axis='y', labelsize=30)
 
+
+
+
+ax.set_xlim([XLimLow, XLimUp])
+
 fig.autofmt_xdate()
 
-#plt.savefig(FigureSaveName+".png", format='png')
+plt.savefig(FigureSaveName+".png", format='png')
 #plt.savefig(FigureSaveName+".pdf", format='pdf')
 
 plt.show()

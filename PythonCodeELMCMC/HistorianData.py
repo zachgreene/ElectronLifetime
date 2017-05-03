@@ -29,7 +29,7 @@ class MyHistorianData:
         # configuration for getter deficiency periods and fraction
         self.GetterDeficiencyConfigs = []
         self.ProbableCathodeRange1 = [10, 20.]
-        self.ProbableCathodeRange2 = [5, 20.]
+        self.ProbableCathodeRange2 = [7., 10.]
         if not self.LoadFile(SCPickleFile):
             raise ValueError("SC pickle file error!")
         self.MaximumHeatingPower = 260. # W
@@ -204,10 +204,30 @@ class MyHistorianData:
         ReturnValues = []
         previousValue = 15. #default
         for unixtime, value in zip(UnixTimes, Values):
-            if unixtime < 1484731512:
+            if unixtime < 1484768100:
                 if value<self.ProbableCathodeRange1[0] or value>self.ProbableCathodeRange1[1]:
                     ReturnValues.append(previousValue)
                     continue
+                ReturnValues.append( value )
+                previousValue = value
+            elif unixtime >= 1484768100 and unixtime < 1484949120:
+                value = 0.
+                ReturnValues.append( value )
+                previousValue = value
+            elif unixtime >= 1484949120 and unixtime < 1485445200:
+                value = 9.
+                ReturnValues.append( value )
+                previousValue = value
+            elif unixtime >= 1485445200 and unixtime < 1485802500:
+                value = 0.
+                ReturnValues.append( value )
+                previousValue = value
+            elif unixtime >= 1485802500 and unixtime < 1486054320:
+                value = 7.
+                ReturnValues.append( value )
+                previousValue = value
+            elif unixtime >= 1486054320 and unixtime < 1487265420:
+                value = 8.
                 ReturnValues.append( value )
                 previousValue = value
             else:
@@ -216,6 +236,7 @@ class MyHistorianData:
                     continue
                 ReturnValues.append( value )
                 previousValue = value
+
         return (MinUnixTime, MaxUnixTime, interp1d(UnixTimes, ReturnValues))
 
     # principle

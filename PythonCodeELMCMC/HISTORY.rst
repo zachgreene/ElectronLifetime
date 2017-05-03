@@ -61,3 +61,9 @@ We need another parameter to address for the outgassing rising during the Rn cal
 
 @ 2017/3/29
 Comparing pax_v6.2.0 with pax_v6.4.2 shows lifetimes from the earlier version are incorrectly low.  Rather than reprocessing all data with newer pax, a conversion factor is found, and added in Tools.py.  Rn lifetimes before 1478000000 (November 1, 2016) and between 1484900000 and  1486100000 (January 18 to February 2, 2017)  are corrected by this.
+
+@ 2017/3/31
+Changed number of parameters from 15 to 14 by elimnating OutgassingRateLXeDecreasingLinearAdditionalConsts that occurred around the end of SR0.
+
+@ 2017/4/2
+Changed number of parametsr from 14 to 15 by including a new getter defficiency following the January 18, 2017 earthquake.  Kept version at 14.  Later changed from 15 to 16 to include change in LXe outgassing rate.

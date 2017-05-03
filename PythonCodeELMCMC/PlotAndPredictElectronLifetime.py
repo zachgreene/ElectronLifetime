@@ -52,7 +52,7 @@ NumOfTrials = 1000
 S1ExponentialConstant = 2040 # us. 
 # setting the parameters
 MinUnixTime = GetUnixTimeFromTimeStamp("05/17/16 00:00:00 ")
-MaxUnixTime = GetUnixTimeFromTimeStamp("03/31/17 00:00:00 ")
+MaxUnixTime = GetUnixTimeFromTimeStamp("05/31/17 00:00:00 ")
 #MinUnixTime = GetUnixTimeFromTimeStamp("05/17/16 00:00:00 ")
 #MaxUnixTime = GetUnixTimeFromTimeStamp("02/21/17 00:00:00 ")
 default_pars = [
@@ -69,9 +69,10 @@ default_pars = [
              [[1471880000, 1472800000, -100.]],
              1000., # GXe outgassing linear decreasing constant, in days.
              1000., # LXe outgassing linear decreasing constant, in days.
-             [[1483920000, 1000.], ], # additional LXe outgassing linear decreasing 
+             [[1487670000, 1000.], ], # additional LXe outgassing linear decreasing 
              [1480317149, 1480926700, 0.98], # periods when getter is suspected to have lowered efficiency, roughly from 11-28 to 12-06
              [1482175745 - 2.*3600., 1482351960 + 2.*3600., 0.2], # periods when getter is suspected to have lowered efficiency, roughly from 11-28 to 12-06
+             [1485351200, 1486002625, 0.9], # periods when getter is suspected to have lowered efficiency after earthquake
             ]
 
 # parameter selection
@@ -84,8 +85,10 @@ default_pars = [
 # 161021: 11 parameters
 # 170207: 14 parameters
 # 170213: 15 parameters
+# 170331: 14 parameters
+# 170402: 16 parameters
 def FormPars(x):
-    if len(x)<15:
+    if len(x)<16:
         return default_pars
     print("x=")
     print(x)
@@ -95,7 +98,7 @@ def FormPars(x):
             IfOutOfBoundary = True
         if i==9 and y>0:
             IfOutOfBoundary = True
-        if (i==2 or i==3 or i==13 or i==14) and y>1:
+        if (i==2 or i==3 or i==13 or i==14 or i==15) and y>1:
             IfOutOfBoundary = True
     pars = default_pars
     pars[1] = x[0] # initial GXe concentration
@@ -110,9 +113,11 @@ def FormPars(x):
     pars[10][0][2] = x[9] # the amount of outgassing in GXe changing due to gas-only flow
     pars[11] = x[10] # GXe outgassing exponential decreasing constant, in days.
     pars[12] = x[11] # LXe outgassing exponential decreasing constant, in days.
-    pars[13][0][1] = x[12] # LXe outgassing linear decreasing constant, in days after Jan 07th.
+    pars[13][0][1] = x[12] # LXe outgassing linear decreasing constant
     pars[14][2] = x[13] # lowered efficiency
     pars[15][2] = x[14] # lowered efficiency for Rn calibration during Christmas
+    pars[16][2] = x[15] # lowered efficiency for after earthquake in January
+ 
     return (pars, IfOutOfBoundary)
 
 def RegulatePars(InputPars):

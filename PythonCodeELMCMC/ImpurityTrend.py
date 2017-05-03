@@ -146,7 +146,7 @@ class MyImpurityTrend:
         # @2016-12-12 either 12 or 13 pars
         # @2017-02-07 either 13 or 14 pars
         # @2017-02-13 either 14 or 15 pars
-        if not (len(pars)==14 or len(pars)==15):
+        if not (len(pars)==15 or len(pars)==16):
             raise ValueError("Number of parameters not enough!")
         IfSameAsPrevious = self.CheckIfSame(pars)
         self.InitialConcentrationGXe = pars[0]
@@ -192,6 +192,13 @@ class MyImpurityTrend:
             self.HistorianData.PopOneGetterDeficiencyConfig()
             self.HistorianData.AddOneGetterDeficiencyConfig(pars[13])
             self.HistorianData.AddOneGetterDeficiencyConfig(pars[14])
+        if len(pars)==16:
+            self.HistorianData.PopOneGetterDeficiencyConfig()
+            self.HistorianData.PopOneGetterDeficiencyConfig()
+            self.HistorianData.PopOneGetterDeficiencyConfig()
+            self.HistorianData.AddOneGetterDeficiencyConfig(pars[13])
+            self.HistorianData.AddOneGetterDeficiencyConfig(pars[14])
+            self.HistorianData.AddOneGetterDeficiencyConfig(pars[15])
         if not IfSameAsPrevious:
             self.CalculateImpurityConcentration()
         return
