@@ -77,9 +77,6 @@ for i, line3 in enumerate(lines3):
     unixtime_err = float(contents[1])
     value = float(contents[2])
     value_err = float(contents[3])
-    #if was calculated using pax_v6.2.0 or younger
-    if unixtime < 1478000000:
-        value, value_err = CorrectForPaxVersion(value, value_err)
     RnUnixtimes.append(unixtime)
     RnUnixtimeErrors.append(unixtime_err)
     RnELifeValues.append(value)
@@ -318,7 +315,7 @@ ax.tick_params(axis='y', labelsize=30)
 
 fig.autofmt_xdate()
 
-plt.savefig(FigureSaveName+".png", format='png')
-plt.savefig(FigureSaveName+".pdf", format='pdf')
+#plt.savefig(FigureSaveName+".png", format='png')
+#plt.savefig(FigureSaveName+".pdf", format='pdf')
 
 plt.show()

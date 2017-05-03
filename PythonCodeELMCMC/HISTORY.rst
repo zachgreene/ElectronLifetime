@@ -58,3 +58,6 @@ We need to address for the larger slope of the "slow" increasing.
 
 @ 2017-02-13
 We need another parameter to address for the outgassing rising during the Rn calibration at Christmas. I would just add another getter low efficiency period.
+
+@ 2017/3/29
+Comparing pax_v6.2.0 with pax_v6.4.2 shows lifetimes from the earlier version are incorrectly low.  Rather than reprocessing all data with newer pax, a conversion factor is found, and added in Tools.py.  Rn lifetimes before 1478000000 (November 1, 2016) and between 1484900000 and  1486100000 (January 18 to February 2, 2017)  are corrected by this.

@@ -51,8 +51,8 @@ NumOfTrials = 1000
 
 S1ExponentialConstant = 2040 # us. 
 # setting the parameters
-MinUnixTime = GetUnixTimeFromTimeStamp("05/01/16 00:00:00 ")
-MaxUnixTime = GetUnixTimeFromTimeStamp("01/21/17 00:00:00 ")
+MinUnixTime = GetUnixTimeFromTimeStamp("05/17/16 00:00:00 ")
+MaxUnixTime = GetUnixTimeFromTimeStamp("03/31/17 00:00:00 ")
 #MinUnixTime = GetUnixTimeFromTimeStamp("05/17/16 00:00:00 ")
 #MaxUnixTime = GetUnixTimeFromTimeStamp("02/21/17 00:00:00 ")
 default_pars = [

@@ -251,9 +251,6 @@ Dates2 = [dt.datetime.fromtimestamp(ts) for ts in UnixTimes2]
 ##############################
 from matplotlib import gridspec
 
-XLimLow = dt.datetime.fromtimestamp(FirstPointUnixTime)
-XLimUp = dt.datetime.fromtimestamp(LastPointUnixTime+DaysAfterLastPoint*3600.*24.)
-
 
 fig = plt.figure(figsize=(25.0, 21.0))
 #plt.rc('text', usetex=True)
@@ -389,8 +386,15 @@ ax.text( dt.datetime.fromtimestamp(1473500000), 480+40, "$\sim$ 40 SLPM", size=2
 ax.text( dt.datetime.fromtimestamp(1475700000), 480+40, "$\sim$ 54 SLPM", size=20.,color='k')
 
 
-ax.set_xlim([XLimLow, XLimUp])
-ax.set_ylim([0, 650])
+ax.set_xlim([
+                     dt.datetime.fromtimestamp(ScienceRunEndUnixtime - 3600*24*5),
+                     dt.datetime.fromtimestamp(LastPointUnixTime+DaysAfterLastPoint*3600.*24.)
+                    ])
+#ax.set_xlim([
+#                     dt.datetime.fromtimestamp(FirstPointUnixTime),
+#                     dt.datetime.fromtimestamp(LastPointUnixTime+DaysAfterLastPoint*3600.*24.)
+#                    ])
+ax.set_ylim([300, 650])
 #ax.legend(loc = 'lower right',prop={'size':20})
 ax.set_xlabel('Date', fontsize=30)
 ax.set_ylabel('Electron lifetime $[\\mu s]$', fontsize=30)
@@ -447,7 +451,14 @@ for RnDate, RnDateErrorLower, RnDateErrorUpper, RnUnixtime in zip(RnDates, RnDat
 ax2.errorbar(RnTempDates, RnELifeValueDeviations,  xerr = [RnTempDatesLow, RnTempDatesUp], yerr=[RnELifeValueDeviationErrors,RnELifeValueDeviationErrors], fmt='o', color='deeppink')
 
 
-ax.set_xlim([XLimLow, XLimUp])
+ax2.set_xlim([
+                     dt.datetime.fromtimestamp(ScienceRunEndUnixtime - 3600*24*5),
+                     dt.datetime.fromtimestamp(LastPointUnixTime+DaysAfterLastPoint*3600.*24.)
+                    ])
+#ax2.set_xlim([
+#                     dt.datetime.fromtimestamp(FirstPointUnixTime),
+#                     dt.datetime.fromtimestamp(LastPointUnixTime+DaysAfterLastPoint*3600.*24.)
+#                    ])
 ax2.set_ylim([-20, 20])
 ax2.set_xlabel('Date', fontsize=30)
 ax2.set_ylabel('Deviation $[\\times 100\%]$', fontsize=25)

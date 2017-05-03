@@ -250,3 +250,17 @@ def PercentileWithInf(Values, deviation):
         return np.inf
     deviation_new = deviation / Fraction *100.
     return np.percentile(NewValues, deviation_new, axis=0)
+
+
+
+# function to correct lifetime values found with pax_v6.2.0 and earlier
+def CorrectForPaxVersion(Lifetime, LifetimeErr):
+    # found by plotting difference in inverse lifetimes
+    LifetimeCorrectionFactor = 6.72734759404e-05
+    LifetimeCorrectionFactorUncertainty = 9.46946770525e-07
+
+    #idea is 1/tau_v6.2.0 - 1/tau_v6.4.0 = const_eff
+    TrueLifetime = Lifetime/(1 - LifetimeCorrectionFactor*Lifetime)
+    TrueLifetimeErr = LifetimeErr/(1. - LifetimeCorrectionFactor*Lifetime) + Lifetime/(1 - LifetimeCorrectionFactor*Lifetime)**2*(LifetimeCorrectionFactorUncertainty*Lifetime + LifetimeCorrectionFactor*LifetimeErr)
+
+    return (TrueLifetime, TrueLifetimeErr)

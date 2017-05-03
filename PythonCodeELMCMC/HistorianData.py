@@ -28,7 +28,8 @@ class MyHistorianData:
                                              ]
         # configuration for getter deficiency periods and fraction
         self.GetterDeficiencyConfigs = []
-        self.ProbableCathodeRange = [10, 20.]
+        self.ProbableCathodeRange1 = [10, 20.]
+        self.ProbableCathodeRange2 = [5, 20.]
         if not self.LoadFile(SCPickleFile):
             raise ValueError("SC pickle file error!")
         self.MaximumHeatingPower = 260. # W
@@ -202,12 +203,19 @@ class MyHistorianData:
         MaxUnixTime = max(UnixTimes)
         ReturnValues = []
         previousValue = 15. #default
-        for value in Values:
-            if value<self.ProbableCathodeRange[0] or value>self.ProbableCathodeRange[1]:
-                ReturnValues.append(previousValue)
-                continue
-            ReturnValues.append( value )
-            previousValue = value
+        for unixtime, value in zip(UnixTimes, Values):
+            if unixtime < 1484731512:
+                if value<self.ProbableCathodeRange1[0] or value>self.ProbableCathodeRange1[1]:
+                    ReturnValues.append(previousValue)
+                    continue
+                ReturnValues.append( value )
+                previousValue = value
+            else:
+                if value<self.ProbableCathodeRange2[0] or value>self.ProbableCathodeRange2[1]:
+                    ReturnValues.append(previousValue)
+                    continue
+                ReturnValues.append( value )
+                previousValue = value
         return (MinUnixTime, MaxUnixTime, interp1d(UnixTimes, ReturnValues))
 
     # principle

@@ -33,6 +33,7 @@ from numpy.linalg import inv
 
 import time
 
+StartingTimeFit = time.time()
 if len(sys.argv)<3:
     print("======== Syntax ==========")
     print("python FitElectronLifetime.py .......")
@@ -50,7 +51,7 @@ FitOutput = sys.argv[2]
 S1ExponentialConstant = 2040.6 # us. 
 # setting the parameters
 MinUnixTime = GetUnixTimeFromTimeStamp("05/17/16 00:00:00 ")
-MaxUnixTime = GetUnixTimeFromTimeStamp("02/21/17 00:00:00 ")
+MaxUnixTime = GetUnixTimeFromTimeStamp("03/31/17 00:00:00 ")
 default_pars = [
              3.7e-3, # attaching rate from literature
              7.12997918e+03, # initial GXe concentration
@@ -65,7 +66,7 @@ default_pars = [
              [[1471880000, 1472800000, -100.]],
              1000., # GXe outgassing linear decreasing constant, in days.
              1000., # LXe outgassing linear decreasing constant, in days.
-             [[1483920000, 1000.], ], # additional LXe outgassing linear decreasing 
+             [[1484840000, 1000.], ], # additional LXe outgassing linear decreasing 
              [1480317149, 1480926700, 0.98], # periods when getter is suspected to have lowered efficiency, roughly from 11-28 to 12-06
              [1482175745 - 2.*3600., 1482351960 + 2.*3600., 0.2], # periods when getter is suspected to have lowered efficiency, roughly from 11-28 to 12-06
             ]
@@ -214,6 +215,9 @@ for line2 in lines2:
     unixtime_err = float(contents[1])
     value = float(contents[2])
     value_err = float(contents[3])
+    #if was calculated using pax_v6.2.0 or younger
+    if unixtime < 1478000000 or (unixtime > 1484900000 and unixtime < 1486100000):
+        value, value_err = CorrectForPaxVersion(value, value_err)
     RnUnixtimes.append(unixtime)
     RnUnixtimeErrors.append(unixtime_err)
     RnELifeValues.append(value)
@@ -313,3 +317,4 @@ OutputData['chain'] = sampler.chain
 OutputData['acceptance_fraction'] = sampler.acceptance_fraction
 pickle.dump(OutputData, open(FitOutput, 'wb'))
 
+print(str((time.time() - StartingTimeFit)/3600.))
