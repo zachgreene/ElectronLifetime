@@ -222,7 +222,7 @@ XLimLow = dt.datetime.fromtimestamp(FirstPointUnixTime)
 XLimUp = dt.datetime.fromtimestamp(LastPointUnixTime+DaysAfterLastPoint*3600.*24.)
 
 
-fig = plt.figure(figsize=(25.0, 21.0))
+fig = plt.figure(figsize=(25.0, 16.0))
 #plt.rc('text', usetex=True)
 #plt.rc('font', family='serif')
 
@@ -328,16 +328,16 @@ ax.text( # Earthquake @ 01/18/2017
             )
 ax.text( # Gas-only circulation
             dt.datetime.fromtimestamp(1471880000-5.*3600.*24.), 
-            575., 
+            675., 
             'Gas-only circulation',
             color='coral',
             size=22.,
             #rotation='vertical',
             )
-ax.text(dt.datetime.fromtimestamp(1471880000), 505, "20 SLPM", color='coral', size=22.)
+ax.text(dt.datetime.fromtimestamp(1471880000), 605, "20 SLPM", color='coral', size=22.)
 ax.text( # PUR upgrade
             dt.datetime.fromtimestamp(1475180000-5.*3600.*24.), 
-            560., 
+            660., 
             'PUR upgrade',
             color='m',
             size=22.,
@@ -347,11 +347,11 @@ ax.text( # PUR upgrade
 
 
 # text the flow rate
-ax.text( dt.datetime.fromtimestamp(1464000000), 480+40., "$\sim$ 40 SLPM", size=20.,color='k')
-ax.text( dt.datetime.fromtimestamp(1466500000), 480+40, "$\sim$ 55 SLPM", size=20.,color='k')
-ax.text( dt.datetime.fromtimestamp(1469500000), 480+40, "45 - 50 SLPM", size=20.,color='k')
-ax.text( dt.datetime.fromtimestamp(1473500000), 480+40, "$\sim$ 40 SLPM", size=20.,color='k')
-ax.text( dt.datetime.fromtimestamp(1475700000), 480+40, "$\sim$ 54 SLPM", size=20.,color='k')
+ax.text( dt.datetime.fromtimestamp(1464000000), 580+40., "$\sim$ 40 SLPM", size=20.,color='k')
+ax.text( dt.datetime.fromtimestamp(1466500000), 580+40, "$\sim$ 55 SLPM", size=20.,color='k')
+ax.text( dt.datetime.fromtimestamp(1469500000), 580+40, "45 - 50 SLPM", size=20.,color='k')
+ax.text( dt.datetime.fromtimestamp(1473500000), 580+40, "$\sim$ 40 SLPM", size=20.,color='k')
+ax.text( dt.datetime.fromtimestamp(1475700000), 580+40, "$\sim$ 54 SLPM", size=20.,color='k')
 
 
 ax.set_xlim([XLimLow, XLimUp])

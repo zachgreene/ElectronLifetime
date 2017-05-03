@@ -8,7 +8,6 @@ import MyHistorianLib
 from MyHistorianLib import GetUnixTimeFromTimeStamp
 
 import FormPars
-from FormPars import FormPars
 
 import Tools
 from Tools import *
@@ -54,8 +53,8 @@ FitOutput = sys.argv[2]
 S1ExponentialConstant = 2040.6 # us. 
 
 # setting the parameters
-MinUnixTime = GetUnixTimeFromTimeStamp(FormPars.MinTimeStamp)
-MaxUnixTime = GetUnixTimeFromTimeStamp(FormPars.MaxTimeStamp)
+MinUnixTime = GetUnixTimeFromTimeStamp(FormPars.GetMinTimeStamp())
+MaxUnixTime = GetUnixTimeFromTimeStamp(FormPars.GetMaxTimeStamp())
 default_pars = FormPars.GetDefaultPars()
 #default_pars = [
 #             3.7e-3, # attaching rate from literature
@@ -274,7 +273,7 @@ def LnLikeData():
 
 def LnLike(x):
     start_time = time.time()
-    pars, IfOutOfBoundary = FormPars(x)
+    pars, IfOutOfBoundary = FormPars.FormPars(x)
     if IfOutOfBoundary:
         print("Out of boundary!")
         return -np.inf
@@ -311,9 +310,8 @@ if not PreWalkingPickleFilename=="NoneExist":
 elif not IfPickleSuccessful:
     for i in range(nwalkers):
         p0.append([np.random.normal(a,b) for a, b in zip(x0, x0_steps)])
-
 import emcee
-sampler = emcee.EnsembleSampler(nwalkers, ndim, LnLike, threads=4)
+sampler = emcee.EnsembleSampler(nwalkers, ndim, LnLike, threads=8)
 sampler.run_mcmc(p0, niterations)
 
 # print(sampler.chain[:,:,:]) 

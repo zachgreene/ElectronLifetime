@@ -7,6 +7,8 @@ from MyHistorianLib import GetUnixTimeFromTimeStamp
 import Tools
 from Tools import *
 
+import FormPars
+
 import ROOT
 from ROOT import TCanvas 
 from ROOT import TFile
@@ -51,29 +53,32 @@ NumOfTrials = 1000
 
 S1ExponentialConstant = 2040 # us. 
 # setting the parameters
-MinUnixTime = GetUnixTimeFromTimeStamp("05/17/16 00:00:00 ")
-MaxUnixTime = GetUnixTimeFromTimeStamp("05/31/17 00:00:00 ")
+#MinUnixTime = GetUnixTimeFromTimeStamp("05/17/16 00:00:00 ")
+#MaxUnixTime = GetUnixTimeFromTimeStamp("05/31/17 00:00:00 ")
 #MinUnixTime = GetUnixTimeFromTimeStamp("05/17/16 00:00:00 ")
 #MaxUnixTime = GetUnixTimeFromTimeStamp("02/21/17 00:00:00 ")
-default_pars = [
-             3.7e-3, # attaching rate from literature
-             7.12997918e+03, # initial GXe concentration
-             5.09257628e+01, # initial LXe concentration
-             4.02212420e-01, # impurity attaching prob for vaporization
-             4.10390827e-01, # impurity attaching prob for condensation
-             1.90294571e+02, # GXe volume outgassing, in unit of kg/day
-             1.94252374e+02, # LXe volume outgassing, in unit of kg/day
-             [1465937520, 1468597800, 1479772379], # time for the impurity change, after correction
-             [0, 0, 0],
-             [1.00613537e-04, 3.36014333e-05, 1.0e-6],
-             [[1471880000, 1472800000, -100.]],
-             1000., # GXe outgassing linear decreasing constant, in days.
-             1000., # LXe outgassing linear decreasing constant, in days.
-             [[1487670000, 1000.], ], # additional LXe outgassing linear decreasing 
-             [1480317149, 1480926700, 0.98], # periods when getter is suspected to have lowered efficiency, roughly from 11-28 to 12-06
-             [1482175745 - 2.*3600., 1482351960 + 2.*3600., 0.2], # periods when getter is suspected to have lowered efficiency, roughly from 11-28 to 12-06
-             [1485351200, 1486002625, 0.9], # periods when getter is suspected to have lowered efficiency after earthquake
-            ]
+MinUnixTime = GetUnixTimeFromTimeStamp(FormPars.GetMinTimeStamp())
+MaxUnixTime = GetUnixTimeFromTimeStamp(FormPars.GetMaxTimeStamp()) + 50*24*3600
+default_pars = FormPars.GetDefaultPars()
+#default_pars = [
+#             3.7e-3, # attaching rate from literature
+#             7.12997918e+03, # initial GXe concentration
+#             5.09257628e+01, # initial LXe concentration
+#             4.02212420e-01, # impurity attaching prob for vaporization
+#             4.10390827e-01, # impurity attaching prob for condensation
+#             1.90294571e+02, # GXe volume outgassing, in unit of kg/day
+#             1.94252374e+02, # LXe volume outgassing, in unit of kg/day
+#             [1465937520, 1468597800, 1479772379], # time for the impurity change, after correction
+#             [0, 0, 0],
+#             [1.00613537e-04, 3.36014333e-05, 1.0e-6],
+#             [[1471880000, 1472800000, -100.]],
+#             1000., # GXe outgassing linear decreasing constant, in days.
+#             1000., # LXe outgassing linear decreasing constant, in days.
+#             [[1487670000, 1000.], ], # additional LXe outgassing linear decreasing 
+#             [1480317149, 1480926700, 0.98], # periods when getter is suspected to have lowered efficiency, roughly from 11-28 to 12-06
+#             [1482175745 - 2.*3600., 1482351960 + 2.*3600., 0.2], # periods when getter is suspected to have lowered efficiency, roughly from 11-28 to 12-06
+#             [1485351200, 1486002625, 0.9], # periods when getter is suspected to have lowered efficiency after earthquake
+#            ]
 
 # parameter selection
 # select which parameters to fit
@@ -87,38 +92,38 @@ default_pars = [
 # 170213: 15 parameters
 # 170331: 14 parameters
 # 170402: 16 parameters
-def FormPars(x):
-    if len(x)<16:
-        return default_pars
-    print("x=")
-    print(x)
-    IfOutOfBoundary = False
-    for i, y in enumerate(x):
-        if y<0 and (not i==9):
-            IfOutOfBoundary = True
-        if i==9 and y>0:
-            IfOutOfBoundary = True
-        if (i==2 or i==3 or i==13 or i==14 or i==15) and y>1:
-            IfOutOfBoundary = True
-    pars = default_pars
-    pars[1] = x[0] # initial GXe concentration
-    pars[2] = x[1] # initial LXe concentration
-    pars[3] = x[2] # vaporization attaching prob
-    pars[4] = x[3] # condensation attaching prob
-    pars[5] = x[4] # GXe outgassing
-    pars[6] = x[5] # LXe outgassing
-    pars[9][0] = x[6] # the amount impurity changed during power event
-    pars[9][1] = x[7] # the amount impurity changed during LN2 test @ July 15th
-    pars[9][2] = x[8] # the amount impurity changed during power glitch @ Nov. 21th
-    pars[10][0][2] = x[9] # the amount of outgassing in GXe changing due to gas-only flow
-    pars[11] = x[10] # GXe outgassing exponential decreasing constant, in days.
-    pars[12] = x[11] # LXe outgassing exponential decreasing constant, in days.
-    pars[13][0][1] = x[12] # LXe outgassing linear decreasing constant
-    pars[14][2] = x[13] # lowered efficiency
-    pars[15][2] = x[14] # lowered efficiency for Rn calibration during Christmas
-    pars[16][2] = x[15] # lowered efficiency for after earthquake in January
- 
-    return (pars, IfOutOfBoundary)
+#def FormPars(x):
+#    if len(x)<16:
+#        return default_pars
+#    print("x=")
+#    print(x)
+#    IfOutOfBoundary = False
+#    for i, y in enumerate(x):
+#        if y<0 and (not i==9):
+#            IfOutOfBoundary = True
+#        if i==9 and y>0:
+#            IfOutOfBoundary = True
+#        if (i==2 or i==3 or i==13 or i==14 or i==15) and y>1:
+#            IfOutOfBoundary = True
+#    pars = default_pars
+#    pars[1] = x[0] # initial GXe concentration
+#    pars[2] = x[1] # initial LXe concentration
+#    pars[3] = x[2] # vaporization attaching prob
+#    pars[4] = x[3] # condensation attaching prob
+#    pars[5] = x[4] # GXe outgassing
+#    pars[6] = x[5] # LXe outgassing
+#    pars[9][0] = x[6] # the amount impurity changed during power event
+#    pars[9][1] = x[7] # the amount impurity changed during LN2 test @ July 15th
+#    pars[9][2] = x[8] # the amount impurity changed during power glitch @ Nov. 21th
+#    pars[10][0][2] = x[9] # the amount of outgassing in GXe changing due to gas-only flow
+#    pars[11] = x[10] # GXe outgassing exponential decreasing constant, in days.
+#    pars[12] = x[11] # LXe outgassing exponential decreasing constant, in days.
+#    pars[13][0][1] = x[12] # LXe outgassing linear decreasing constant
+#    pars[14][2] = x[13] # lowered efficiency
+#    pars[15][2] = x[14] # lowered efficiency for Rn calibration during Christmas
+#    pars[16][2] = x[15] # lowered efficiency for after earthquake in January
+# 
+#    return (pars, IfOutOfBoundary)
 
 def RegulatePars(InputPars):
     OutputPars = []
@@ -177,6 +182,7 @@ MCMCResults = pickle.load(open(FitResultInput, 'rb'))
 ndim = MCMCResults['ndim']
 nwalkers = MCMCResults['nwalkers']
 niterations = MCMCResults['niterations']
+print(ndim, nwalkers, niterations)
 
 # Cutting Burn-In and unreasonable region
 # the value shall already be from "PlotElectronLifetime.py"
@@ -192,7 +198,7 @@ print(mean)
 #############################
 # plot 
 #############################
-Pars, IfSth=FormPars(mean)
+Pars, IfSth=FormPars.FormPars(mean)
 #MaxUnixTime = LastPointUnixTime + 60.*3600.*24. # 2 month after the last data point
 # The main Light yield Trend
 pElectronLifetimeTrend = MyElectronLifetimeTrend(HistorianFile, MinUnixTime, MaxUnixTime, Pars)
@@ -267,7 +273,7 @@ for i in range(len(UnixTimes)):
 Pars_Trials = PickupMCMCPosteriors(samples_cut, NumOfTrials)
 for i, pars_random in enumerate(Pars_Trials):
     print("i = "+str(i))
-    pars, IfSth = FormPars(pars_random)
+    pars, IfSth = FormPars.FormPars(pars_random)
     pElectronLifetimeTrend.SetParameters(pars)
     for j, unixtime in enumerate(UnixTimes):
         Trends[j].append(pElectronLifetimeTrend.GetElectronLifetime(unixtime))

@@ -56,7 +56,6 @@ class MyImpurityTrend:
         self.OutgassingRateGXeChanges = other.OutgassingRateGXeChanges # [start/end changing unixtime, changing amount], assuming linear
         self.OutgassingRateGXeDecreasingLinearConst = other.OutgassingRateGXeDecreasingLinearConst
         self.OutgassingRateLXeDecreasingLinearConst = other.OutgassingRateLXeDecreasingLinearConst
-        self.OutgassingRateLXeDecreasingLinearAdditionalConsts = other.OutgassingRateLXeDecreasingLinearAdditionalConsts
         # [ start unixtime, linear coefficient]
         # interp1d
         self.inter_ConcentrationsGXe = other.inter_ConcentrationsGXe
@@ -137,7 +136,6 @@ class MyImpurityTrend:
         self.OutgassingRateGXeChanges = []
         self.OutgassingRateGXeDecreasingLinearConst = 10000. # days
         self.OutgassingRateLXeDecreasingLinearConst = 10000. # days
-        self.OutgassingRateLXeDecreasingLinearAdditionalConsts = []
         return
 
     def SetParameters(self, pars):
@@ -146,7 +144,7 @@ class MyImpurityTrend:
         # @2016-12-12 either 12 or 13 pars
         # @2017-02-07 either 13 or 14 pars
         # @2017-02-13 either 14 or 15 pars
-        if not (len(pars)==15 or len(pars)==16):
+        if not (len(pars)==14 or len(pars)==15 or len(pars)==16):
             raise ValueError("Number of parameters not enough!")
         IfSameAsPrevious = self.CheckIfSame(pars)
         self.InitialConcentrationGXe = pars[0]
@@ -183,22 +181,21 @@ class MyImpurityTrend:
         if self.OutgassingRateLXeDecreasingLinearConst<0.001/3600./24.:
             # cannot be less than 1ms
             self.OutgassingRateLXeDecreasingLinearConst = 0.001/3600./24.
-        self.OutgassingRateLXeDecreasingLinearAdditionalConsts = pars[12]
+        if len(pars)==13:
+            self.HistorianData.PopOneGetterDeficiencyConfig()
+            self.HistorianData.AddOneGetterDeficiencyConfig(pars[12])
         if len(pars)==14:
             self.HistorianData.PopOneGetterDeficiencyConfig()
-            self.HistorianData.AddOneGetterDeficiencyConfig(pars[13])
-        if len(pars)==15:
             self.HistorianData.PopOneGetterDeficiencyConfig()
-            self.HistorianData.PopOneGetterDeficiencyConfig()
+            self.HistorianData.AddOneGetterDeficiencyConfig(pars[12])
             self.HistorianData.AddOneGetterDeficiencyConfig(pars[13])
-            self.HistorianData.AddOneGetterDeficiencyConfig(pars[14])
         if len(pars)==16:
             self.HistorianData.PopOneGetterDeficiencyConfig()
             self.HistorianData.PopOneGetterDeficiencyConfig()
             self.HistorianData.PopOneGetterDeficiencyConfig()
+            self.HistorianData.AddOneGetterDeficiencyConfig(pars[12])
             self.HistorianData.AddOneGetterDeficiencyConfig(pars[13])
             self.HistorianData.AddOneGetterDeficiencyConfig(pars[14])
-            self.HistorianData.AddOneGetterDeficiencyConfig(pars[15])
         if not IfSameAsPrevious:
             self.CalculateImpurityConcentration()
         return
@@ -217,7 +214,6 @@ class MyImpurityTrend:
                                     self.OutgassingRateGXeChanges,
                                     self.OutgassingRateLXeDecreasingLinearConst,
                                     self.OutgassingRateGXeDecreasingLinearConst,
-                                    self.OutgassingRateLXeDecreasingLinearAdditionalConsts,
                                     self.HistorianData.GetGetterDeficiencyConfigs(),
                                    ]
 
@@ -258,10 +254,10 @@ class MyImpurityTrend:
             ConcentrationChangeGXe = self.OutgassingRateGXe * (1. -  day / self.OutgassingRateGXeDecreasingLinearConst )# linear
             # define LXe decreasing rate
             theOutgassingRateLXeDecreasingLinearConst = self.OutgassingRateLXeDecreasingLinearConst 
-            for i, config in enumerate(self.OutgassingRateLXeDecreasingLinearAdditionalConsts):
-                if unixtime < config[0]:
-                    break
-                theOutgassingRateLXeDecreasingLinearConst = config[1]
+#            for i, config in enumerate(self.OutgassingRateLXeDecreasingLinearAdditionalConsts):
+#                if unixtime < config[0]:
+#                    break
+#                theOutgassingRateLXeDecreasingLinearConst = config[1]
             ConcentrationChangeLXe = self.OutgassingRateLXe * (1. - day / theOutgassingRateLXeDecreasingLinearConst ) # linear
             # check if necessary to change the outgassing level in GXe
             for changes in self.OutgassingRateGXeChanges:
