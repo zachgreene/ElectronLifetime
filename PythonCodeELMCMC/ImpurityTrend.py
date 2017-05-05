@@ -179,12 +179,12 @@ class MyImpurityTrend:
         self.OutgassingRateGXeChanges = pars[9]
         self.OutgassingRateGXeDecreasingLinearConst = pars[10]
         self.OutgassingRateLXeDecreasingLinearConst = pars[11]
-        if self.OutgassingRateGXeDecreasingLinearConst<0.001/3600./24.:
+#        if self.OutgassingRateGXeDecreasingLinearConst<0.001/3600./24.:
             # cannot be less than 1ms
-            self.OutgassingRateGXeDecreasingLinearConst = 0.001/3600./24.
-        if self.OutgassingRateLXeDecreasingLinearConst<0.001/3600./24.:
+#            self.OutgassingRateGXeDecreasingLinearConst = 0.001/3600./24.
+#        if self.OutgassingRateLXeDecreasingLinearConst<0.001/3600./24.:
             # cannot be less than 1ms
-            self.OutgassingRateLXeDecreasingLinearConst = 0.001/3600./24.
+#            self.OutgassingRateLXeDecreasingLinearConst = 0.001/3600./24.
         self.OutgassingRateGXeFractions = pars[12]
         self.OutgassingRateLXeFractions = pars[13]
         if len(pars)==15:
