@@ -93,6 +93,19 @@ def GetUnixTimeAndDatetimeFromTimeStampTool(timestamp):
     dt = datetime.datetime(int(Year), int(Month), int(Day), int(Hour), int(Minute), int(Second))
     return (dt,time.mktime(dt.timetuple()))
 
+def GetUnixTimeFromTimeStamp(timestamp):
+    #print(timestamp)
+    reduce_stamp = timestamp[0:17]
+    if len(timestamp)<18:
+        return None
+    Contents = reduce_stamp.split(" ")
+    Month, Day, Year = Contents[0].split("/")
+    Hour, Minute, Second = Contents[1].split(":")
+    Year = "20"+Year
+    dt = datetime.datetime(int(Year), int(Month), int(Day), int(Hour), int(Minute), int(Second))
+    return time.mktime(dt.timetuple())
+
+
 
 # Get the dictionary containing 
 # 1) unixtime
