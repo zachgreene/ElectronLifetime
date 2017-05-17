@@ -370,7 +370,7 @@ ax.text( # Gas-only circulation
             size=22.,
             #rotation='vertical',
             )
-ax.text(dt.datetime.fromtimestamp(1471880000), 505, "20 SLPM", color='coral', size=22.)
+ax.text(dt.datetime.fromtimestamp(1471880000), 585, "20 SLPM", color='coral', size=22.)
 ax.text( # PUR upgrade
             dt.datetime.fromtimestamp(1475180000-5.*3600.*24.), 
             660., 
@@ -459,6 +459,7 @@ ax2.tick_params(axis='y', labelsize=30)
 fig.autofmt_xdate()
 
 plt.savefig(FigureSaveName+".png", format='png')
+plt.savefig(FigureSaveName+".pdf", format='pdf')
 #plt.savefig(FigureSaveName+".pdf", format='pdf')
 
 plt.show()
