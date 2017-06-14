@@ -48,7 +48,7 @@ BurnInWalkers = str(int(NumIterations) - 200)
 EXE1 = '/home/zgreene/xenon1t/ElectronLifetime/PythonCodeELMCMC/FitElectronLifetime.py'
 ARGS1 = ' '.join([HistorianFile, OutputPickleFile, ElectronLifetimeDataFile, RnElectronLifetimeDataFile, NumWalkers, NumIterations, InputPickleFile])
 
-EXE2 = '/home/zgreene/xenon1t/ElectronLifetime/PythonCodeELMCMC/PlotAndPredictElectronLifetime.py'
+EXE2 = '/home/zgreene/xenon1t/ElectronLifetime/PythonCodeELMCMC/PredictElectronLifetime.py'
 ARGS2 = ' '.join([HistorianFile, OutputPickleFile, OutputPredictionFile, BurnInWalkers])
 
 
