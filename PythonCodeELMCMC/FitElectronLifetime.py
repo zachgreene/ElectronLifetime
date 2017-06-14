@@ -34,7 +34,10 @@ from scipy.optimize import minimize
 from numpy.linalg import inv
 
 import time
-
+import copy
+import click
+import pickle
+import emcee
 
 
 StartingTimeFit = time.time()
@@ -54,7 +57,7 @@ HistorianFile = sys.argv[1]
 FitOutput = sys.argv[2]
 S1ExponentialConstant = 2040.6 # us. 
 
-print('Fitting Electron Lifetime between ' + FormPars.GetMinTimeStamp() + ' and ' + FormPars.GetMaxTimeStamp())
+print('\nFitting Electron Lifetime between ' + FormPars.GetMinTimeStamp() + ' and ' + FormPars.GetMaxTimeStamp() + '\n')
 
 # setting the parameters
 MinUnixTime = GetUnixTimeFromTimeStamp(FormPars.GetMinTimeStamp())
@@ -122,6 +125,8 @@ RnELifeValues = []
 RnELifeValueErrors = []
 
 for line2 in lines2:
+    if line2[0] == '#':
+        continue
     contents = line2[:-1].split("\t\t")
     unixtime = float(contents[0])
     unixtime_err = float(contents[1])
@@ -183,9 +188,9 @@ def LnLike(x):
 #    print("==== The parameters: =====")
 #    print(pElectronLifetimeTrend.GetParameters())
     LnL = LnLikeData()
-    print(" LnL = "+str(LnL))
+#    print(" LnL = "+str(LnL))
 #    print("=====================")
-    print("Takes: "+str(time.time()-start_time) + " sec")
+#    print("Takes: "+str(time.time()-start_time) + " sec")
     return LnL
 
 ####################
@@ -212,9 +217,47 @@ elif not IfPickleSuccessful:
     for i in range(nwalkers):
 #        p0.append([np.random.normal(a,b) for a, b in zip(x0, x0_steps)])
         p0.append([np.random.uniform(a-2*b,a+2*b) for a, b in zip(x0, x0_steps)])
-import emcee
-sampler = emcee.EnsembleSampler(nwalkers, ndim, LnLike, threads=28)
-sampler.run_mcmc(p0, niterations)
+
+#sampler = emcee.EnsembleSampler(nwalkers, ndim, LnLike, threads=28)
+# from Matt's github https://github.com/mdanthony17/emcee
+sampler = emcee.DESampler(nwalkers, ndim, LnLike, threads=28)
+#sampler = emcee.DESampler(nwalkers, ndim, LnLike)
+
+#for results in sampler.sample(p0, iterations=niterations):
+#    pass
+#with sampler.sample(p0=p0, iterations=niterations) as mcmc_sampler:
+
+with click.progressbar(sampler.sample(p0=p0, iterations=niterations), length=niterations) as mcmc_sampler:
+    for i,results in enumerate(mcmc_sampler):
+#        print(i)
+        if (i+1)%500 == 0:
+#            print('making sampler')
+            temp_sampler = copy.copy(sampler)
+            del temp_sampler.__dict__['lnprobfn']
+            del temp_sampler.__dict__['pool']
+
+            OutputData = {}
+            OutputData['prefilename']=PreWalkingPickleFilename
+            OutputData['sampler'] = temp_sampler
+            pickle.dump(OutputData, open(FitOutput, 'wb'))
+
+            del temp_sampler
+        pass
+#    for i, l_iterator_values in enumerate(mcmc_sampler):
+#        print(i)
+#        if (i+1)%500:
+#            temp_sampler = sampler
+#            del temp_sampler.__dict__['lnprobfn']
+#            del temp_sampler.__dict__['pool']
+#
+#            OutputData = {}
+#            OutputData['prefilename']=PreWalkingPickleFilename
+#            OutputData['sampler'] = temp_sampler
+#            pickle.dump(OutputData, open(FitOutput, 'wb'))
+
+#sampler.run_mcmc(p0, niterations)
+
+
 
 # print(sampler.chain[:,:,:]) 
 # the sampler.chain is just a list of each (walker, iterator, dim) value
@@ -223,8 +266,6 @@ sampler.run_mcmc(p0, niterations)
 # delete un-pickleable parts of sampler: lnprobfn and pool
 del sampler.__dict__['lnprobfn']
 del sampler.__dict__['pool']
-
-import pickle
 
 OutputData = {}
 OutputData['prefilename']=PreWalkingPickleFilename

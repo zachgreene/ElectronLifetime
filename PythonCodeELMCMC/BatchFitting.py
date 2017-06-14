@@ -40,15 +40,26 @@ RnElectronLifetimeDataFile = os.path.abspath(RnElectronLifetimeDataFile)
 if len(sys.argv) > 9:
     InputPickleFile = os.path.abspath(InputPickleFile)
 
+OutputPredictionFile = OutputPickleFile.split('/')[-1].split('_')[-1].split('.')[0]
+OutputPredictionFile = '/'.join(OutputPickleFile.split('/')[:-2]) + '/TXTs/Prediction_' + OutputPredictionFile
+BurnInWalkers = str(int(NumIterations) - 200)
 
-EXE = '/home/zgreene/xenon1t/ElectronLifetime/PythonCodeELMCMC/FitElectronLifetime.py'
-ARGS = ' '.join([HistorianFile, OutputPickleFile, ElectronLifetimeDataFile, RnElectronLifetimeDataFile, NumWalkers, NumIterations, InputPickleFile])
 
+EXE1 = '/home/zgreene/xenon1t/ElectronLifetime/PythonCodeELMCMC/FitElectronLifetime.py'
+ARGS1 = ' '.join([HistorianFile, OutputPickleFile, ElectronLifetimeDataFile, RnElectronLifetimeDataFile, NumWalkers, NumIterations, InputPickleFile])
+
+EXE2 = '/home/zgreene/xenon1t/ElectronLifetime/PythonCodeELMCMC/PlotAndPredictElectronLifetime.py'
+ARGS2 = ' '.join([HistorianFile, OutputPickleFile, OutputPredictionFile, BurnInWalkers])
+
+
+#print('python ' + EXE1 + ' ' + ARGS1 + '\n')
+#print('python ' + EXE2 + ' ' + ARGS2 + '\n')
+#exit()
 
 # confirm BatchFitting.py and FitElectronLifetime.py are from same version
-BatchFitPath = os.path.abspath(sys.argv[0])
-ContentsBatchFit = BatchFitPath.split('/')
-ContentsFit = EXE.split('/')
+#BatchFitPath = os.path.abspath(sys.argv[0])
+#ContentsBatchFit = BatchFitPath.split('/')
+#ContentsFit = EXE1.split('/')
 
 #if ContentsBatchFit[-2] != ContentsFit[-2]:
 #    print('\nERROR: %s/BatchFitting.py and %s/FitEelectronLifetime.py are from different versions, exiting\n' %(ContentsBatchFit[-2], ContentsFit[-2]))
@@ -84,8 +95,11 @@ else:
 subp.call("echo '#SBATCH --mail-type=END\n' >> " + SubmitFile, shell=True)
 subp.call("echo '#SBATCH --mail-user=zgreene\n' >> " + SubmitFile, shell=True)
 subp.call("echo '. /home/zgreene/ENV/GlobalPAXEnv.sh\n' >> " + SubmitFile, shell=True)
+#subp.call("echo 'echo $PYTHONPATH\n' >> " + SubmitFile, shell=True)
+#subp.call("echo 'echo $PATH\n' >> " + SubmitFile, shell=True)
 #subp.call("echo '. /home/zgreene/ENV/BatchReductionEnv.sh\n' >> " + SubmitFile, shell=True)
-subp.call("echo 'python " + EXE + " " + ARGS +"\n' >> " + SubmitFile, shell=True)
+subp.call("echo 'python " + EXE1 + " " + ARGS1 +"\n' >> " + SubmitFile, shell=True)
+subp.call("echo 'python " + EXE2 + " " + ARGS2 +"\n' >> " + SubmitFile, shell=True)
 
 
 #subp.call("python " + EXE + " " + ARGS, shell=True)

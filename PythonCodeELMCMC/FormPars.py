@@ -4,7 +4,7 @@ def GetMinTimeStamp():
 	return '05/17/16 00:00:00 '
 
 def GetMaxTimeStamp():
-	return '05/21/17 00:00:00 '
+	return '06/21/17 00:00:00 '
 
 # parameter selection
 # select which parameters to fit
@@ -32,9 +32,10 @@ def GetDefaultPars():
 		4.10390827e-01, # impurity attaching prob for condensation
 		1.90294571e+02, # GXe volume outgassing, in unit of kg/day
 		1.94252374e+02, # LXe volume outgassing, in unit of kg/day
-		[1465937520, 1468597800, 1479772379, 1485951100], # time for the impurity change, after correction
-		[0, 0, 0, 0],
-		[1.00613537e-04, 3.36014333e-05, 4.0e-6, 1.0e-6],
+		[1465937520, 1468597800, 1479772379, 1485951100, 1496685600], # time for the impurity change, after correction
+                # 1496685600 from https://xenon-elog.lngs.infn.it/elog/XENON1T/484
+		[0, 0, 0, 1, 1],
+		[1.00613537e-04, 3.36014333e-05, 4.0e-6, 1.0e-6, 1.e-6],
 		[[1471880000, 1472800000, -100.]],
 		1000., # GXe outgassing linear decreasing constant, in days.
 		1000., # LXe outgassing linear decreasing constant, in days.
@@ -49,17 +50,17 @@ def GetDefaultPars():
 
 
 def FormPars(x):
-	if len(x)<17:
+	if len(x)<18:
 		return GetDefaultPars()
 #	print("x=")
 #	print(x)
 	IfOutOfBoundary = False
 	for i, y in enumerate(x):
-		if y<0 and (not i==10):
+		if y<0 and (not i==11):
 			IfOutOfBoundary = True
-		if i==10 and y>0:
+		if i==11 and y>0:
 			IfOutOfBoundary = True
-		if (i==2 or i==3 or i==14 or i==15 or i==16) and y>1:
+		if (i==2 or i==3 or i==15 or i==16 or i==17) and y>1:
 			IfOutOfBoundary = True
 	pars = GetDefaultPars()
 	pars[1] = x[0] # initial GXe concentration
@@ -69,16 +70,17 @@ def FormPars(x):
 	pars[5] = x[4] # GXe outgassing
 	pars[6] = x[5] # LXe outgassing
 	pars[9][0] = x[6] # the amount impurity changed during power event
-	pars[9][1] = x[7] # the amount impurity changed during LN2 test @ July 15th
-	pars[9][2] = x[8] # the amount impurity changed during power glitch @ Nov. 21th
-	pars[9][3] = x[9] # the amount impurity after earthquake in late January
-	pars[10][0][2] = x[10] # the amount of outgassing in GXe changing due to gas-only flow
-	pars[11] = x[11] # GXe outgassing exponential decreasing constant, in days.
-	pars[12] = x[12] # LXe outgassing exponential decreasing constant, in days.
-	pars[13][0][2] = x[13] # fraction of GXe outgassing during gas-only circulation
-	pars[14][0][2] = x[14] # fraction of LXe outgassing during PUR upgrade
-	pars[15][2] = x[15] # lowered efficiency
-	pars[16][2] = x[16] # lowered efficiency for Rn calibration during Christmas
+	pars[9][1] = x[7] # the amount impurity changed during LN2 test @ July 15, 2016
+	pars[9][2] = x[8] # the amount impurity changed during power glitch @ Nov. 21, 2016
+	pars[9][3] = x[9] # the amount impurity after earthquake in late January 2017
+	pars[9][4] = x[10] # amount of impurity from gate washing on June 5, 2017
+	pars[10][0][2] = x[11] # the amount of outgassing in GXe changing due to gas-only flow
+	pars[11] = x[12] # GXe outgassing exponential decreasing constant, in days.
+	pars[12] = x[13] # LXe outgassing exponential decreasing constant, in days.
+	pars[13][0][2] = x[14] # fraction of GXe outgassing during gas-only circulation
+	pars[14][0][2] = x[15] # fraction of LXe outgassing during PUR upgrade
+	pars[15][2] = x[16] # lowered efficiency
+	pars[16][2] = x[17] # lowered efficiency for Rn calibration during Christmas
 	return (pars, IfOutOfBoundary)
 
 
@@ -93,6 +95,7 @@ def GetInitialParametersMCMC():
 		1.00e-5,
 		3.77e-6,
 		3.77e-6,
+		1.77e-6,
 		1.77e-6,
 #		2.77e-6,
 #		2.77e-6,
@@ -124,6 +127,7 @@ def GetInitialParametersMCMC():
 		1e-6,
 #		1e-6,
 		2e-7,
+		2e-7,
 		30,
 		300.,
 		300.,
@@ -148,9 +152,10 @@ def GetParInfo():
                 ['$\Delta I_2$', 'Impurity change during LN2 test, July 15', 'mol'],
                 ['$\Delta I_3$', 'Impurity change during power glitch, Nov. 21', 'mol'],
                 ['$\Delta I_4$', 'Impurity change after earthquake, late January', 'mol'],
+                ['$\Delta I_5$', 'Impurity change from gate washing, 17/06/05', 'mol'],
                 ['$\Delta \Lambda_g$', 'Decrease in GXe outgassing from GXe-only flow', 'kg*ppb/day'],
-                ['$\Lambda_g^0 \\frac{dt}{d \Lambda_g}$', 'GXe outgassing linear constant', 'days'],
-                ['$\Lambda_l^0 \\frac{dt}{d \Lambda_l}$', 'LXe outgassing linear constant', 'days'],
+                ['$\\tau_{\Lambda_g}$', 'GXe outgassing linear constant', 'days'],
+                ['$\\tau_{\Lambda_l}$', 'LXe outgassing linear constant', 'days'],
                 ['$f_l$', 'fraction of GXe outgassing during GXe-only circulation', ''],
                 ['$f_g$', 'fraction of LXe outgassing during PUR upgrade', ''],
                 ['$\\alpha_1 $', 'lowered getter efficiency, Nov. 28 - Dec. 5', ''],
@@ -160,13 +165,27 @@ def GetParInfo():
     return ParInfo
 
 
+def GetScienceRunUnixtimes():
+    ScienceRunUnixtimes = [
+                            [1479772800, 1484731512]
+                            ]
+    return ScienceRunUnixtimes
+
+
 def GetImpactfulUnixtimes():
+        ScienceRunUnixtimes = GetScienceRunUnixtimes()
         default_pars = GetDefaultPars()
+
         ImpactfulUnixtimes = []
+        for ScienceRun in ScienceRunUnixtimes:
+            for StartEndTime in ScienceRun:
+                ImpactfulUnixtimes.append(StartEndTime)
+
         ImpactfulUnixtimes.append(default_pars[7][0])
         ImpactfulUnixtimes.append(default_pars[7][1])
         ImpactfulUnixtimes.append(default_pars[7][2])
         ImpactfulUnixtimes.append(default_pars[7][3])
+        ImpactfulUnixtimes.append(default_pars[7][4])
         ImpactfulUnixtimes.append(default_pars[10][0][0])
         ImpactfulUnixtimes.append(default_pars[10][0][1])
         ImpactfulUnixtimes.append(default_pars[13][0][0])

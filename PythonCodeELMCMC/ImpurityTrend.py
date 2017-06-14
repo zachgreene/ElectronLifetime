@@ -148,8 +148,8 @@ class MyImpurityTrend:
         # @2016-12-12 either 12 or 13 pars
         # @2017-02-07 either 13 or 14 pars
         # @2017-02-13 either 14 or 15 pars
-        if not (len(pars)==14 or len(pars)==15 or len(pars)==16 or len(pars)==17):
-            raise ValueError("Number of parameters not enough!")
+#        if not (len(pars)==14 or len(pars)==15 or len(pars)==16 or len(pars)==17):
+#            raise ValueError("Number of parameters not enough!")
         IfSameAsPrevious = self.CheckIfSame(pars)
         self.InitialConcentrationGXe = pars[0]
         self.InitialConcentrationLXe = pars[1]
@@ -375,7 +375,9 @@ class MyImpurityTrend:
             ConcentrationChangeLXe *= TrueTimeStep/self.MassLXe
             # check if need the change
             for i, unixtime_change in enumerate(self.ImpurityChangingUnixTimes):
-                if unixtime>unixtime_change and unixtime-TrueTimeStep*3600.*24. < unixtime_change:
+                if unixtime>=unixtime_change and unixtime-TrueTimeStep*3600.*24. < unixtime_change:
+#                    print(self.ImpurityChangingUnixTimes)
+#                    print(i, unixtime, unixtime_change, self.ImpurityChangingTypes[i], self.ImpurityConcentrationChanges[i])
                     if self.ImpurityChangingTypes[i]==0:
                         ConcentrationChangeGXe += self.ImpurityConcentrationChanges[i] / self.MassGXe *0.133 * 1e9
                     elif self.ImpurityChangingTypes[i]==1:

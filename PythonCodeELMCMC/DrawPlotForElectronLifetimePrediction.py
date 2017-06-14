@@ -73,6 +73,9 @@ RnELifeValues = []
 RnELifeValueErrors = []
 
 for i, line3 in enumerate(lines3):
+    if line3[0] == '#':
+#        print(line3)
+        continue
     contents = line3[:-1].split("\t\t")
     unixtime = float(contents[0])
     unixtime_err = float(contents[1])
@@ -281,7 +284,14 @@ for ts, ts_err in zip(Xe131mUnixtimes, Xe131mUnixtimeErrors):
     date_err_upper = dt.datetime.fromtimestamp(ts + ts_err) - date
     Xe131mDateErrorLowers.append( date_err_lower )
     Xe131mDateErrorUppers.append( date_err_upper )
+#UnixTimes2 = np.asarray(UnixTimes2)
+#PredictedELifes = np.asarray(PredictedELifes)
+#PredictedELifeLowers = np.asarray(PredictedELifeLowers)
+#PredictedELifeUppers = np.asarray(PredictedELifeUppers)
+#Dates2 = [dt.datetime.fromtimestamp(ts) for ts in UnixTimes2[UnixTimes2 < 1484731512]]
 Dates2 = [dt.datetime.fromtimestamp(ts) for ts in UnixTimes2]
+#UnixtimeOther = 1484731512 + 2.5*24*3600.
+#Dates3 = [dt.datetime.fromtimestamp(ts) for ts in UnixTimes2[UnixTimes2 > UnixtimeOther]]
 
 
 ##############################
@@ -322,6 +332,22 @@ ax.fill_between(
                          label='$\pm 1 \sigma$ C.L. region',
                          alpha=0.5,
                         )
+
+#ax.plot(
+#            Dates3,
+#            PredictedELifes[UnixTimes2 > UnixtimeOther],
+#            linewidth=2.,
+#            color = 'r',
+#            label='Best-fit trend',
+#           )
+#ax.fill_between(
+#                         Dates3,
+#                         PredictedELifeLowers[UnixTimes2 > UnixtimeOther],
+#                         PredictedELifeUppers[UnixTimes2 > UnixtimeOther],
+#                         color='b',
+#                         label='$\pm 1 \sigma$ C.L. region',
+#                         alpha=0.5,
+#                        )
 
 
 # plot the vertical lines for system change
@@ -393,6 +419,7 @@ ax.text( # LN2 test, PTR warm up
             )
 ax.text( # Earthquake @ 01/18/2017
             dt.datetime.fromtimestamp(1484731512+2.*3600.*24.), 
+#            dt.datetime.fromtimestamp(1484731512+1.*3600.*24.), 
             450., 
             'Earthquake @ 01/18/17',
             color='k',
@@ -429,8 +456,11 @@ ax.text( dt.datetime.fromtimestamp(1475700000), 580+40, "$\sim$ 54 SLPM", size=2
 #ax.grid(True)
 #XLimLow = datetime.datetime(2017, 3, 8, 0, 0)
 #XLimUp = datetime.datetime(2017, 4, 28, 0, 0)
+#XLimLow = datetime.datetime(2016, 11, 17, 0, 0)
+#XLimUp = datetime.datetime(2017, 1, 22, 0, 0)
 ax.set_xlim([XLimLow, XLimUp])
 ax.set_ylim([0, 650])
+#ax.set_ylim([300, 550])
 ax.legend(loc = 'lower right',prop={'size':20})
 ax.set_xlabel('Date', fontsize=30)
 ax.set_ylabel('Electron lifetime $[\\mu s]$', fontsize=30)
@@ -445,6 +475,6 @@ ax.set_xlim([XLimLow, XLimUp])
 fig.autofmt_xdate()
 
 plt.savefig(FigureSaveName+".png", format='png')
-#plt.savefig(FigureSaveName+".pdf", format='pdf')
+plt.savefig(FigureSaveName+".pdf", format='pdf')
 
 plt.show()
