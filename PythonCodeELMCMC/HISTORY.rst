@@ -1,4 +1,16 @@
-from Zach Greene
+by Zach Greene
+
+##################
+2017/6/14
+##################
+Sudden impurity decrease addded at 1496685600 (June 5, 2017) due to washing of gate, as a result of hotspot
+
+
+##################
+2017/5/19
+##################
+Switched to differential evolution (DE) MCMC sampler
+
 
 ##################
 2017/4/3
@@ -24,7 +36,7 @@ Changed number of parameters from 15 to 14 by elimnating OutgassingRateLXeDecrea
 Comparing pax_v6.2.0 with pax_v6.4.2 shows lifetimes from the earlier version are incorrectly low.  Rather than reprocessing all data with newer pax, a conversion factor is found, and added in Tools.py.  Rn lifetimes before 1478000000 (November 1, 2016) and between 1484900000 and  1486100000 (January 18 to February 2, 2017)  are corrected by this.
 
 
-from Qing Lin
+by Qing Lin
 
 ##################
 2017-02-13

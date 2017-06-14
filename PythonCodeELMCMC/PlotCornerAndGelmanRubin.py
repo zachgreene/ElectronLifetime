@@ -95,7 +95,7 @@ fig = plt.figure(figsize=(15, 20))
 colors = plt.get_cmap('Paired')(np.linspace(0, 1., ndim))
 
 for i, Par in enumerate(ParNames):
-    plt.plot(aForPlotting, dGelmanRubin[Par], label=Par, color=colors[i])
+    plt.plot(aForPlotting, dGelmanRubin[Par], label=Par, color=colors[i], linewidth=3)
 
 plt.hlines([1.1], 0, TotalEvents, color='k', linestyle='--')
 plt.xlabel('Iterations')
