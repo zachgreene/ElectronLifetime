@@ -36,12 +36,7 @@ old/
 
 ProcessingList/
 
-PythonCode/
-PythonCodeV2/
-PythonCodeV3/
-PythonCodeV4/
-PythonCodeV5/
-PythonCodeV6/
+PythonCode/__pycache__/
 PythonCodeKr83/
 PythonCodeXe131m/
 
