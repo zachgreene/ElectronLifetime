@@ -268,6 +268,17 @@ class MyImpurityTrend:
             LXeFractionMaxUnixtime = -1
         return (GXeFractionMinUnixtime, GXeFractionMaxUnixtime, LXeFractionMinUnixtime, LXeFractionMaxUnixtime)
 
+    def GetGXeOutgassingRate(self, day):
+        Rate = self.OutgassingRateGXe * (1. -  day / self.OutgassingRateGXeDecreasingLinearConst)
+        if Rate <= 0:
+            return 0.
+        return Rate
+
+    def GetLXeOutgassingRate(self, day):
+        Rate = self.OutgassingRateLXe * (1. -  day / self.OutgassingRateLXeDecreasingLinearConst)
+        if Rate <= 0:
+            return 0.
+        return Rate
 
     def CalculateImpurityConcentration(self):
         # main function for calculating the impurity trend
@@ -295,9 +306,11 @@ class MyImpurityTrend:
             PreviousConcentrationGXe = ConcentrationsGXe[i-1]
             PreviousConcentrationLXe = ConcentrationsLXe[i-1]
             # differential concentration of GXe & LXe
-            ConcentrationChangeGXe = self.OutgassingRateGXe * (1. -  day / self.OutgassingRateGXeDecreasingLinearConst )# linear
+#            ConcentrationChangeGXe = self.OutgassingRateGXe * (1. -  day / self.OutgassingRateGXeDecreasingLinearConst )# linear
+            ConcentrationChangeGXe = self.GetGXeOutgassingRate(day)
             # define LXe decreasing rate
-            ConcentrationChangeLXe = self.OutgassingRateLXe * (1. - day / self.OutgassingRateLXeDecreasingLinearConst ) # linear
+#            ConcentrationChangeLXe = self.OutgassingRateLXe * (1. - day / self.OutgassingRateLXeDecreasingLinearConst ) # linear
+            ConcentrationChangeLXe = self.GetLXeOutgassingRate(day)
 #            theOutgassingRateLXeDecreasingLinearConst = self.OutgassingRateLXeDecreasingLinearConst 
 #            for i, config in enumerate(self.OutgassingRateLXeDecreasingLinearAdditionalConsts):
 #                if unixtime < config[0]:

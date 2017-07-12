@@ -205,11 +205,16 @@ for i, line in enumerate(lines2):
     if unixtime>LastPointUnixTime+DaysAfterLastPoint*3600.*24.:
         break
     UnixTimes2.append(unixtime)
-    PredictedELifes.append( SimpleCorrection(elife, FitterUsedS1ExponentialConstant, S1ExponentialConstant) )
-    PredictedELifeLowers.append(SimpleCorrection(elife_lower, FitterUsedS1ExponentialConstant, S1ExponentialConstant) )
-    PredictedELifeUppers.append(SimpleCorrection(elife_upper, FitterUsedS1ExponentialConstant, S1ExponentialConstant) )
+    PredictedELifes.append(elife)
+    PredictedELifeLowers.append(elife_lower)
+    PredictedELifeUppers.append(elife_upper)
     PredictedELifeLowerErrors.append( (elife_lower - elife)/elife)
     PredictedELifeUpperErrors.append((elife_upper - elife)/elife)
+#    PredictedELifes.append( SimpleCorrection(elife, FitterUsedS1ExponentialConstant, S1ExponentialConstant) )
+#    PredictedELifeLowers.append(SimpleCorrection(elife_lower, FitterUsedS1ExponentialConstant, S1ExponentialConstant) )
+#    PredictedELifeUppers.append(SimpleCorrection(elife_upper, FitterUsedS1ExponentialConstant, S1ExponentialConstant) )
+#    PredictedELifeLowerErrors.append( (elife_lower - elife)/elife)
+#    PredictedELifeUpperErrors.append((elife_upper - elife)/elife)
 
 from scipy.interpolate import interp1d
 
@@ -300,6 +305,7 @@ Dates2 = [dt.datetime.fromtimestamp(ts) for ts in UnixTimes2]
 from matplotlib import gridspec
 
 XLimLow = dt.datetime.fromtimestamp(FirstPointUnixTime)
+XLimLow = dt.datetime.fromtimestamp(1485802500)
 XLimUp = dt.datetime.fromtimestamp(LastPointUnixTime+DaysAfterLastPoint*3600.*24.)
 
 
@@ -417,24 +423,23 @@ ax.text( # LN2 test, PTR warm up
             size=22.,
             rotation='vertical',
             )
-ax.text( # Earthquake @ 01/18/2017
-            dt.datetime.fromtimestamp(1484731512+2.*3600.*24.), 
-#            dt.datetime.fromtimestamp(1484731512+1.*3600.*24.), 
-            450., 
-            'Earthquake @ 01/18/17',
-            color='k',
-            size=22.,
-            rotation='vertical',
-            )
+#ax.text( # Earthquake @ 01/18/2017
+#            dt.datetime.fromtimestamp(1484731512+2.*3600.*24.), 
+#            450., 
+#            'Earthquake @ 01/18/17',
+#            color='k',
+#            size=22.,
+#            rotation='vertical',
+#            )
 ax.text( # Gas-only circulation
-            dt.datetime.fromtimestamp(1471880000-5.*3600.*24.), 
+            dt.datetime.fromtimestamp(1471880000-7.*3600.*24.), 
             675., 
             'Gas-only circulation',
             color='coral',
             size=22.,
             #rotation='vertical',
             )
-ax.text(dt.datetime.fromtimestamp(1471880000), 605, "20 SLPM", color='coral', size=22.)
+ax.text(dt.datetime.fromtimestamp(1471880000), 580+20, "20 SLPM", color='coral', size=22.)
 ax.text( # PUR upgrade
             dt.datetime.fromtimestamp(1475180000-5.*3600.*24.), 
             660., 
@@ -448,10 +453,10 @@ ax.text( # PUR upgrade
 
 # text the flow rate
 ax.text( dt.datetime.fromtimestamp(1464000000), 580+40., "$\sim$ 40 SLPM", size=20.,color='k')
-ax.text( dt.datetime.fromtimestamp(1466500000), 580+40, "$\sim$ 55 SLPM", size=20.,color='k')
+ax.text( dt.datetime.fromtimestamp(1466500000), 580+20, "$\sim$ 55 SLPM", size=20.,color='k')
 ax.text( dt.datetime.fromtimestamp(1469500000), 580+40, "45 - 50 SLPM", size=20.,color='k')
 ax.text( dt.datetime.fromtimestamp(1473500000), 580+40, "$\sim$ 40 SLPM", size=20.,color='k')
-ax.text( dt.datetime.fromtimestamp(1475700000), 580+40, "$\sim$ 54 SLPM", size=20.,color='k')
+ax.text( dt.datetime.fromtimestamp(1475700000), 580+20, "$\sim$ 54 SLPM", size=20.,color='k')
 
 #ax.grid(True)
 #XLimLow = datetime.datetime(2017, 3, 8, 0, 0)
@@ -459,7 +464,8 @@ ax.text( dt.datetime.fromtimestamp(1475700000), 580+40, "$\sim$ 54 SLPM", size=2
 #XLimLow = datetime.datetime(2016, 11, 17, 0, 0)
 #XLimUp = datetime.datetime(2017, 1, 22, 0, 0)
 ax.set_xlim([XLimLow, XLimUp])
-ax.set_ylim([0, 650])
+#ax.set_ylim([0, 650])
+ax.set_ylim([400, 650])
 #ax.set_ylim([300, 550])
 ax.legend(loc = 'lower right',prop={'size':20})
 ax.set_xlabel('Date', fontsize=30)

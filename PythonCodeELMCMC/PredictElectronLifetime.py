@@ -121,7 +121,8 @@ for i, pars_random in enumerate(Pars_Trials):
 StandardDeviation1Sigma = [15.4, 50., 84.6]
 Taus = []
 LowerBoundaries = []
-UpperBoundaries = [] for i, deviation in enumerate(StandardDeviation1Sigma):
+UpperBoundaries = []
+for i, deviation in enumerate(StandardDeviation1Sigma):
     for Values in Trends:
         Boundary = PercentileWithInf(Values, deviation)
         if i==0:

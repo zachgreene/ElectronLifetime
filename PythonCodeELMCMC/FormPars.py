@@ -4,7 +4,7 @@ def GetMinTimeStamp():
 	return '05/17/16 00:00:00 '
 
 def GetMaxTimeStamp():
-	return '06/21/17 00:00:00 '
+	return '08/21/17 00:00:00 '
 
 # parameter selection
 # select which parameters to fit
