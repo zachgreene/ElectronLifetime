@@ -6,6 +6,8 @@ import pickle
 import pandas as pd
 from scipy.interpolate import interp1d
 
+import FormPars
+
 
 #import ROOT
 #from ROOT import TFile
@@ -16,23 +18,26 @@ class MyHistorianData:
 
     def __init__(self, SCPickleFile):
         self.ReferenceUnixTime = 0
-        self.SpecialPeriod = [
-                                         [1465913920, 1466517600]
-                                        ] # in this period don't do the valve status treatment
+        self.SpecialPeriod = FormPars.GetSpecialPeriods()
+#        self.SpecialPeriod = [
+#                                         [1465913920, 1466517600]
+#                                        ] # in this period don't do the valve status treatment
         # during the gas only period, the circulation route is very different
         # see: https://xecluster.lngs.infn.it/dokuwiki/lib/exe/fetch.php?media=xenon:xenon1t:org:commissioning:meetings:160817:xenon1t-operating_modes-circulation-mode_3_x-circulation_gxe_high_flow-v0.pdf
         # so now the total flow is not basically the sum of FCV201&FCV202
         # but only FCV201
-        self.GasOnlyPeriod = [
-                                              [1471900000, 1472840000],# the end day is 09/10 temporarily
-                                             ]
+        self.GasOnlyPeriod = FormPars.GetGasOnlyPeriods()
+#        self.GasOnlyPeriod = [
+#                                              [1471900000, 1472840000],# the end day is 09/10 temporarily
+#                                             ]
         # configuration for getter deficiency periods and fraction
         self.GetterDeficiencyConfigs = []
-        self.ProbableCathodeRange1 = [10, 20.]
-        self.ProbableCathodeRange2 = [7., 10.]
+#        self.ProbableCathodeRange1 = [10, 20.]
+#        self.ProbableCathodeRange2 = [7., 10.]
         if not self.LoadFile(SCPickleFile):
             raise ValueError("SC pickle file error!")
-        self.MaximumHeatingPower = 260. # W
+#        self.MaximumHeatingPower = 260. # W
+        self.MaximumHeatingPower = FormPars.GetMaximumHeatingPower() # W
         return
 
     def AddGasOnlyPeriod(self, Period):
@@ -203,49 +208,65 @@ class MyHistorianData:
         MaxUnixTime = max(UnixTimes)
         ReturnValues = []
         previousValue = 15. #default
+        CathodeVoltages = FormPars.GetCathodeVoltages()
         for unixtime, value in zip(UnixTimes, Values):
-            if unixtime < 1484768100:
-                if unixtime >  1473956519 and unixtime < 1473997763:
-                    value = 15.
-                    ReturnValues.append(value)
-                    previousValue = value
+            for Array in CathodeVoltages:
+                if unixtime >= Array[0][0] and unixtime < Array[0][1]:
+                    # force voltage to take on value
+                    if Array[1][0] == Array[1][1]:
+                        value = Array[1][0]
+                        RetrunValues.append(value)
+                        previousValue = value
+                    else:
+                        if value >= Array[1][0] and value < Array[1][1]:
+                            ReturnValues.append(value)
+                            previousValue = value
+                        else:
+                            ReturnValues.append(previousValue)
                     continue
-                if unixtime >  1475301507 and unixtime < 1475391507:
-                    value = 12.
-                    ReturnValues.append(value)
-                    previousValue = value
-                    continue
-                elif value<self.ProbableCathodeRange1[0] or value>self.ProbableCathodeRange1[1]:
-                    ReturnValues.append(previousValue)
-                    continue
-                ReturnValues.append( value )
-                previousValue = value
-            elif unixtime >= 1484768100 and unixtime < 1484949120:
-                value = 0.
-                ReturnValues.append( value )
-                previousValue = value
-            elif unixtime >= 1484949120 and unixtime < 1485445200:
-                value = 9.
-                ReturnValues.append( value )
-                previousValue = value
-            elif unixtime >= 1485445200 and unixtime < 1485802500:
-                value = 0.
-                ReturnValues.append( value )
-                previousValue = value
-            elif unixtime >= 1485802500 and unixtime < 1486054320:
-                value = 7.
-                ReturnValues.append( value )
-                previousValue = value
-            elif unixtime >= 1486054320 and unixtime < 1487265420:
-                value = 8.
-                ReturnValues.append( value )
-                previousValue = value
-            else:
-                if value<self.ProbableCathodeRange2[0] or value>self.ProbableCathodeRange2[1]:
-                    ReturnValues.append(previousValue)
-                    continue
-                ReturnValues.append( value )
-                previousValue = value
+#        for unixtime, value in zip(UnixTimes, Values):
+#            if unixtime < 1484768100:
+#                if unixtime >  1473956519 and unixtime < 1473997763:
+#                    value = 15.
+#                    ReturnValues.append(value)
+#                    previousValue = value
+#                    continue
+#                if unixtime >  1475301507 and unixtime < 1475391507:
+#                    value = 12.
+#                    ReturnValues.append(value)
+#                    previousValue = value
+#                    continue
+#                elif value<self.ProbableCathodeRange1[0] or value>self.ProbableCathodeRange1[1]:
+#                    ReturnValues.append(previousValue)
+#                    continue
+#                ReturnValues.append( value )
+#                previousValue = value
+#            elif unixtime >= 1484768100 and unixtime < 1484949120:
+#                value = 0.
+#                ReturnValues.append( value )
+#                previousValue = value
+#            elif unixtime >= 1484949120 and unixtime < 1485445200:
+#                value = 9.
+#                ReturnValues.append( value )
+#                previousValue = value
+#            elif unixtime >= 1485445200 and unixtime < 1485802500:
+#                value = 0.
+#                ReturnValues.append( value )
+#                previousValue = value
+#            elif unixtime >= 1485802500 and unixtime < 1486054320:
+#                value = 7.
+#                ReturnValues.append( value )
+#                previousValue = value
+#            elif unixtime >= 1486054320 and unixtime < 1487265420:
+#                value = 8.
+#                ReturnValues.append( value )
+#                previousValue = value
+#            else:
+#                if value<self.ProbableCathodeRange2[0] or value>self.ProbableCathodeRange2[1]:
+#                    ReturnValues.append(previousValue)
+#                    continue
+#                ReturnValues.append( value )
+#                previousValue = value
 
         return (MinUnixTime, MaxUnixTime, interp1d(UnixTimes, ReturnValues))
 

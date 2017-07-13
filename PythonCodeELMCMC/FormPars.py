@@ -13,6 +13,35 @@ def GetS1ExponentialConstant():
 def GetLifetimeCorrectionPAX():
     return 1478000000.
 
+def GetCathodeVoltages():
+    Array = [
+            [[0, 1473956519], [10., 20.]],
+            [[1473956519, 1473997763], [15., 15.]],
+            [[1473997763, 1475301507], [10., 20.]],
+            [[1475301507, 1475391507], [12., 12.]],
+            [[1475391507, 1484768100], [10., 20.]],
+            [[1484768100, 1484949120], [0., 0.]],
+            [[1484949120, 1485445200], [9., 9.]],
+            [[1485445200, 1485802500], [0., 0.]],
+            [[1485802500, 1486054320], [7., 7.]],
+            [[1486054320, 1487265420], [8., 8.]],
+            [[1487265420, float('inf')], [7., 10.]]
+            ]
+    return Array
+
+def GetSpecialPeriods():
+    SpecialPeriods = [
+                        [1465913920, 1466517600]
+                        ]
+
+def GetGasOnlyPeriods():
+    GasOnlyPeriods = [
+                        [1471900000, 1472840000],
+                        ]
+
+def GetMaximumHeatingPower():
+    return 260.
+
 # parameter selection
 # select which parameters to fit
 # 160609: 5 parameters
