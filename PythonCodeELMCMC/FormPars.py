@@ -6,6 +6,13 @@ def GetMinTimeStamp():
 def GetMaxTimeStamp():
 	return '08/21/17 00:00:00 '
 
+def GetS1ExponentialConstant():
+    return 2040.6
+
+#if was calculated using pax_v6.2.0 or younger
+def GetLifetimeCorrectionPAX():
+    return 1478000000.
+
 # parameter selection
 # select which parameters to fit
 # 160609: 5 parameters

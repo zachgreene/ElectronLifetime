@@ -12,23 +12,6 @@ import FormPars
 import Tools
 from Tools import *
 
-import ROOT
-from ROOT import TCanvas 
-from ROOT import TFile
-from ROOT import TTree
-from ROOT import TChain
-from ROOT import TCut
-from ROOT import TH1
-from ROOT import TH1D
-from ROOT import TH2
-from ROOT import TH2D
-from ROOT import TGraph
-from ROOT import TGraphErrors
-from ROOT import TF1
-from ROOT import TLatex
-from ROOT import TLine
-from ROOT import TPad
-
 import numpy as np
 from scipy.optimize import minimize
 from numpy.linalg import inv
@@ -55,7 +38,6 @@ if len(sys.argv)<3:
 
 HistorianFile = sys.argv[1]
 FitOutput = sys.argv[2]
-S1ExponentialConstant = 2040.6 # us. 
 
 print('\nFitting Electron Lifetime between ' + FormPars.GetMinTimeStamp() + ' and ' + FormPars.GetMaxTimeStamp() + '\n')
 
@@ -70,19 +52,6 @@ x0, x0_steps = FormPars.GetInitialParametersMCMC()
 # The main Light yield Trend
 pElectronLifetimeTrend = MyElectronLifetimeTrend(HistorianFile, MinUnixTime, MaxUnixTime, default_pars)
 
-# Need to load the S2/S1 elife data
-ElectronLifetimeDataFile = sys.argv[3]
-f1 = open(ElectronLifetimeDataFile)
-lines1 = f1.readlines()
-f1.close()
-
-# Need to also load Rn data
-RnElectronLifetimeDataFile = sys.argv[4]
-f2 = open(RnElectronLifetimeDataFile)
-lines2 = f2.readlines()
-f2.close()
-
-
 # pre-walking
 nwalkers = int(sys.argv[5])
 niterations = int(sys.argv[6])
@@ -91,55 +60,16 @@ if len(sys.argv)>7:
     PreWalkingPickleFilename = sys.argv[7]
 
 ElectronLifetimeData = {}
-gEL = TGraphErrors()
 #############################
 # fill in the data
 #############################
-# electron lifetime
-UnixTimes = []
-Values = []
-ValueErrors = []
-for i, line in enumerate(lines1):
-    contents = line[:-1].split("\t\t")
-    #print(contents[0])
-    unixtime = float(contents[0])
-    unixtime_err = float(contents[1])
-    value = float(contents[2])
-    value_err = float(contents[3])
-    # correct the e-life by the S1 term
-    value = value*S1ExponentialConstant / (S1ExponentialConstant - value)
-    value_err = value*np.sqrt( np.power(value_err/value, 2.0)+np.power(value_err/ (S1ExponentialConstant - value), 2.) )
-    if value_err<=0:
-        continue
-    UnixTimes.append(unixtime)
-    Values.append(value)
-    ValueErrors.append(value_err)
-    gEL.SetPoint(i, unixtime, value)
-    gEL.SetPointError(i, unixtime_err, value_err)
 
+# load eelectron lifetime data
+
+UnixTimes, UnixTimeErrors, Values, ValueErrors = LoadFitData('SingleScatter', PathToFile=ElectronLifetimeDataFile)
+RnUnixtimes, RnUnixtimeErrors, RnELifeValues, RnELifeValueErrors = LoadFitData('Rn', PathToFile=RnElectronLifetimeDataFile)
 
 ## Load the Rn data
-RnUnixtimes = []
-RnUnixtimeErrors = []
-RnELifeValues = []
-RnELifeValueErrors = []
-
-for line2 in lines2:
-    if line2[0] == '#':
-        continue
-    contents = line2[:-1].split("\t\t")
-    unixtime = float(contents[0])
-    unixtime_err = float(contents[1])
-    value = float(contents[2])
-    value_err = float(contents[3])
-    #if was calculated using pax_v6.2.0 or younger
-#    if unixtime < 1478000000 or (unixtime > 1484900000 and unixtime < 1486100000):
-    if unixtime < 1478000000:
-        value, value_err = CorrectForPaxVersion(value, value_err)
-    RnUnixtimes.append(unixtime)
-    RnUnixtimeErrors.append(unixtime_err)
-    RnELifeValues.append(value)
-    RnELifeValueErrors.append(value_err)
 
 RnMinUnixtime = np.min(RnUnixtimes)
 # Remove values that has unixtime larger than the first one in RnUnixTimes

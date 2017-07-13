@@ -35,58 +35,88 @@ FitterUsedS1ExponentialConstant = 2040.
 ### Get the elife data
 #######################################
 # electron lifetime
-fin1 = open(ELifeDataFile)
-lines1 = fin1.readlines()
-fin1.close()
 
-UnixTimes = []
-UnixTimeErrors = []
-ELifeValues = []
-ELifeValueErrors = []
-for i, line in enumerate(lines1):
-    contents = line[:-1].split("\t\t")
-    unixtime = float(contents[0])
-    unixtime_err = float(contents[1])
-    value = float(contents[2])
-    value_err = float(contents[3])
-    # correct the e-life by the S1 term
-    value = value*S1ExponentialConstant / (S1ExponentialConstant - value)
-    value_err = value*np.sqrt( np.power(value_err/value,2.0)+np.power(value_err/ (S1ExponentialConstant - value), 2.) )
-    UnixTimes.append(unixtime)
-    UnixTimeErrors.append(unixtime_err)
-    ELifeValues.append(value)
-    ELifeValueErrors.append(value_err)
+Xe129mELifeDataFile = '/home/zgreene/xenon1t/ElectronLifetime/FitData/ElectronLifetimeDataWithXe129m.txt'
+Xe131mELifeDataFile = '/home/zgreene/xenon1t/ElectronLifetime/FitData/ElectronLifetimeDataWithXe131m.txt'
+
+
+#######################################
+### Get single scatter elife data
+#######################################
+UnixTimes, UnixTimeErrors, ELifeValues, ELifeValueErrors = LoadFitData('SingleScatter', PathToFile=ELifeDataFile)
+
 FirstPointUnixTime = UnixTimes[0]
 LastPointUnixTime = UnixTimes[len(UnixTimes)-1]
 
 ######################################
 ## Get Rn elife data
 ######################################
-fin3 = open(RnELifeDataFile)
-lines3 = fin3.readlines()
-fin3.close()
+RnUnixtimes, RnUnixtimeErrors, RnELifeValues, RnELifeValueErrors = LoadFitData('Rn', PathToFile=RnELifeDataFile)
+
+
+####################################
+# Get Kr83m elifes 
+####################################
+KrUnixtimes, KrUnixtimeErrors, KrELifeValues, KrELifeValueErrors = LoadFitData('Kr83', PathToFile=Kr83ELifeDataFile)
+
+####################################
+# Get Xe129m/Xe131m elifes 
+####################################
+Xe129mUnixtimes, Xe129mUnixtimeErrors, Xe129mELifeValues, Xe129mELifeValueErrors = LoadFitData('Xe129', PathToFile=Xe129mELifeDataFile)
+Xe131mUnixtimes, Xe131mUnixtimeErrors, Xe131mELifeValues, Xe131mELifeValueErrors = LoadFitData('Xe131', PathToFile=Xe131mELifeDataFile)
+
+#fin1 = open(ELifeDataFile)
+#lines1 = fin1.readlines()
+#fin1.close()
+
+#UnixTimes = []
+#UnixTimeErrors = []
+#ELifeValues = []
+#ELifeValueErrors = []
+#for i, line in enumerate(lines1):
+#    contents = line[:-1].split("\t\t")
+#    unixtime = float(contents[0])
+#    unixtime_err = float(contents[1])
+#    value = float(contents[2])
+#    value_err = float(contents[3])
+#    # correct the e-life by the S1 term
+#    value = value*S1ExponentialConstant / (S1ExponentialConstant - value)
+#    value_err = value*np.sqrt( np.power(value_err/value,2.0)+np.power(value_err/ (S1ExponentialConstant - value), 2.) )
+#    UnixTimes.append(unixtime)
+#    UnixTimeErrors.append(unixtime_err)
+#    ELifeValues.append(value)
+#    ELifeValueErrors.append(value_err)
+#FirstPointUnixTime = UnixTimes[0]
+#LastPointUnixTime = UnixTimes[len(UnixTimes)-1]
+
+######################################
+## Get Rn elife data
+######################################
+#fin3 = open(RnELifeDataFile)
+#lines3 = fin3.readlines()
+#fin3.close()
 #print(lines3)
 
-RnUnixtimes = []
-RnUnixtimeErrors = []
-RnELifeValues = []
-RnELifeValueErrors = []
+#RnUnixtimes = []
+#RnUnixtimeErrors = []
+#RnELifeValues = []
+#RnELifeValueErrors = []
 
-for i, line3 in enumerate(lines3):
-    contents = line3[:-1].split("\t\t")
-    unixtime = float(contents[0])
-    unixtime_err = float(contents[1])
-    value = float(contents[2])
-    value_err = float(contents[3])
-    #if was calculated using pax_v6.2.0 or younger
-#    if unixtime < 1478000000 or (unixtime > 1484900000 and unixtime < 1486100000):
-    if unixtime < 1478000000:
-        print(unixtime, value, value_err, *CorrectForPaxVersion(value, value_err))
-        value, value_err = CorrectForPaxVersion(value, value_err)
-    RnUnixtimes.append(unixtime)
-    RnUnixtimeErrors.append(unixtime_err)
-    RnELifeValues.append(value)
-    RnELifeValueErrors.append(value_err)
+#for i, line3 in enumerate(lines3):
+#    contents = line3[:-1].split("\t\t")
+#    unixtime = float(contents[0])
+#    unixtime_err = float(contents[1])
+#    value = float(contents[2])
+#    value_err = float(contents[3])
+#    #if was calculated using pax_v6.2.0 or younger
+##    if unixtime < 1478000000 or (unixtime > 1484900000 and unixtime < 1486100000):
+#    if unixtime < 1478000000:
+#        print(unixtime, value, value_err, *CorrectForPaxVersion(value, value_err))
+#        value, value_err = CorrectForPaxVersion(value, value_err)
+#    RnUnixtimes.append(unixtime)
+#    RnUnixtimeErrors.append(unixtime_err)
+#    RnELifeValues.append(value)
+#    RnELifeValueErrors.append(value_err)
 
 LastPointUnixTime = RnUnixtimes[-1]
 
@@ -102,25 +132,25 @@ ELifeValueErrors = ELifeValueErrors[:CutID]
 ####################################
 # Get Kr83m elifes 
 ####################################
-fin4 = open(Kr83ELifeDataFile)
-lines4 = fin4.readlines()
-fin4.close()
+#fin4 = open(Kr83ELifeDataFile)
+#lines4 = fin4.readlines()
+#fin4.close()
 #print(lines4)
 
-KrUnixtimes = []
-KrUnixtimeErrors = []
-KrELifeValues = []
-KrELifeValueErrors = []
+#KrUnixtimes = []
+#KrUnixtimeErrors = []
+#KrELifeValues = []
+#KrELifeValueErrors = []
 
-for i, line4 in enumerate(lines4):
-    contents = line4[:-1].split(" ")
-    unixtime = float(contents[0])
-    value = float(contents[1])
-    value_err = float(contents[2])
-    KrUnixtimes.append(unixtime)
-    KrUnixtimeErrors.append(0)
-    KrELifeValues.append(value)
-    KrELifeValueErrors.append(value_err)
+#for i, line4 in enumerate(lines4):
+#    contents = line4[:-1].split(" ")
+#    unixtime = float(contents[0])
+#    value = float(contents[1])
+#    value_err = float(contents[2])
+#    KrUnixtimes.append(unixtime)
+#    KrUnixtimeErrors.append(0)
+#    KrELifeValues.append(value)
+#    KrELifeValueErrors.append(value_err)
 
 #######################################
 ## Get the prediction lists
@@ -149,12 +179,19 @@ for i, line in enumerate(lines2):
     elife_upper = float(contents[3])
     if unixtime>LastPointUnixTime+DaysAfterLastPoint*3600.*24.:
         break
+
     UnixTimes2.append(unixtime)
-    PredictedELifes.append( SimpleCorrection(elife, FitterUsedS1ExponentialConstant, S1ExponentialConstant) )
-    PredictedELifeLowers.append(SimpleCorrection(elife_lower, FitterUsedS1ExponentialConstant, S1ExponentialConstant) )
-    PredictedELifeUppers.append(SimpleCorrection(elife_upper, FitterUsedS1ExponentialConstant, S1ExponentialConstant) )
+    PredictedELifes.append(elife)
+    PredictedELifeLowers.append(elife_lower)
+    PredictedELifeUppers.append(elife_upper)
     PredictedELifeLowerErrors.append( (elife_lower - elife)/elife)
     PredictedELifeUpperErrors.append((elife_upper - elife)/elife)
+#    UnixTimes2.append(unixtime)
+#    PredictedELifes.append( SimpleCorrection(elife, FitterUsedS1ExponentialConstant, S1ExponentialConstant) )
+#    PredictedELifeLowers.append(SimpleCorrection(elife_lower, FitterUsedS1ExponentialConstant, S1ExponentialConstant) )
+#    PredictedELifeUppers.append(SimpleCorrection(elife_upper, FitterUsedS1ExponentialConstant, S1ExponentialConstant) )
+#    PredictedELifeLowerErrors.append( (elife_lower - elife)/elife)
+#    PredictedELifeUpperErrors.append((elife_upper - elife)/elife)
 
 from scipy.interpolate import interp1d
 

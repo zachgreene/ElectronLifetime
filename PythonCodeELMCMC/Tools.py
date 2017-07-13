@@ -10,6 +10,8 @@ from ROOT import TH1
 from ROOT import TH1D
 from ROOT import TGraph
 
+import FormPars
+
 def GetFrame(hname, MinUnixTime, MaxUnixTime, MinValue, MaxValue, xtitle, ytitle):
     hframe = TH1D(hname, "", 100, MinUnixTime/3600./24., MaxUnixTime/3600./24.)
     hframe.SetStats(0)
@@ -328,3 +330,77 @@ def PrintParameterQuantilesWiki(samples, quantiles, ParNames, ParDescs, ParUnits
 #        print(str(ParameterQuantiles[i][1]) + '_{-', end='')
 #        print(str(ParErrorLow[i]) + '}^{+', end='')
 #        print(str(ParErrorUp[i]) + '}  |')
+
+####################################
+# Get Kr83m elifes 
+####################################
+def LoadLifetimesKr83(PathToFile='/home/zgreene/xenon1t/ElectronLifetime/FitData/ElectronLifetimeDataWithKr83.txt'):
+    fin = open(PathToFile)
+    lines = fin.readlines()
+    fin.close()
+    
+    KrUnixtimes = []
+    KrUnixtimeErrors = []
+    KrELifeValues = []
+    KrELifeValueErrors = []
+    
+    for i, line in enumerate(lines):
+        if line[0] == '#':
+            continue
+        contents = line[:-1].split(" ")
+        unixtime = float(contents[0])
+        value = float(contents[1])
+        value_err = float(contents[2])
+        KrUnixtimes.append(unixtime)
+        KrUnixtimeErrors.append(0)
+        KrELifeValues.append(value)
+        KrELifeValueErrors.append(value_err)
+
+    return (KrUnixtimes, KrUnixtimeErrors, KrELifeValues, KrELifeValueErrors)
+
+
+def LoadLifetimesNorm(FitType, PathToFile):
+    fin = open(PathToFile)
+    lines = fin.readlines()
+    fin.close()
+    
+    Unixtimes = []
+    UnixtimeErrors = []
+    ELifeValues = []
+    ELifeValueErrors = []
+    
+    for i, line in enumerate(lines):
+        if line[0] == '#':
+            continue
+
+        contents = line[:-1].split("\t\t")
+        unixtime = float(contents[0])
+        unixtime_err = float(contents[1])
+        value = float(contents[2])
+        value_err = float(contents[3])
+        # account for LCE
+        if FitType == 'SingleScatter':
+            S1ExponentialConstant = FormPars.GetS1ExponentialConstant()
+            value = value*S1ExponentialConstant / (S1ExponentialConstant - value)
+            value_err = value * np.sqrt(np.power(value_err/value,2.0) +
+                                        np.power(value_err/ (S1ExponentialConstant - value), 2.))
+            if value_err < 0.:
+                continue
+        #if was calculated using pax_v6.2.0 or younger
+        elif FitType == 'Rn' and unixtime < FormPars.GetLifetimeCorrectionPAX():
+#            print(unixtime, value, value_err, *CorrectForPaxVersion(value, value_err))
+            value, value_err = CorrectForPaxVersion(value, value_err)
+        Unixtimes.append(unixtime)
+        UnixtimeErrors.append(unixtime_err)
+        ELifeValues.append(value)
+        ELifeValueErrors.append(value_err)
+
+    return (Unixtimes, UnixtimeErrors, ELifeValues, ELifeValueErrors)
+
+
+def LoadFitData(FitType, PathToFile):
+    if FitType == 'Kr83':
+        return LoadLifetimesKr83()
+    else:
+        return LoadLifetimesNorm(FitType, PathToFile)
+    return -1

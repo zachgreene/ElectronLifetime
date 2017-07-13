@@ -28,68 +28,22 @@ PredictionFile = sys.argv[4]
 DaysAfterLastPoint = float(sys.argv[5])
 FigureSaveName = sys.argv[6]
 
-S1ExponentialConstant = 2040. # us. 
-FitterUsedS1ExponentialConstant = 2040.
+Xe129mELifeDataFile = '/home/zgreene/xenon1t/ElectronLifetime/FitData/ElectronLifetimeDataWithXe129m.txt'
+Xe131mELifeDataFile = '/home/zgreene/xenon1t/ElectronLifetime/FitData/ElectronLifetimeDataWithXe131m.txt'
+
 
 #######################################
-### Get the elife data
+### Get single scatter elife data
 #######################################
-# electron lifetime
-fin1 = open(ELifeDataFile)
-lines1 = fin1.readlines()
-fin1.close()
+UnixTimes, UnixTimeErrors, ELifeValues, ELifeValueErrors = LoadFitData('SingleScatter', PathToFile=ELifeDataFile)
 
-UnixTimes = []
-UnixTimeErrors = []
-ELifeValues = []
-ELifeValueErrors = []
-for i, line in enumerate(lines1):
-    contents = line[:-1].split("\t\t")
-    unixtime = float(contents[0])
-    unixtime_err = float(contents[1])
-    value = float(contents[2])
-    value_err = float(contents[3])
-    # correct the e-life by the S1 term
-    value = value*S1ExponentialConstant / (S1ExponentialConstant - value)
-    value_err = value*np.sqrt( np.power(value_err/value,2.0)+np.power(value_err/ (S1ExponentialConstant - value), 2.) )
-    UnixTimes.append(unixtime)
-    UnixTimeErrors.append(unixtime_err)
-    ELifeValues.append(value)
-    ELifeValueErrors.append(value_err)
 FirstPointUnixTime = UnixTimes[0]
 LastPointUnixTime = UnixTimes[len(UnixTimes)-1]
 
 ######################################
 ## Get Rn elife data
 ######################################
-fin3 = open(RnELifeDataFile)
-lines3 = fin3.readlines()
-fin3.close()
-#print(lines3)
-
-RnUnixtimes = []
-RnUnixtimeErrors = []
-RnELifeValues = []
-RnELifeValueErrors = []
-
-for i, line3 in enumerate(lines3):
-    if line3[0] == '#':
-#        print(line3)
-        continue
-    contents = line3[:-1].split("\t\t")
-    unixtime = float(contents[0])
-    unixtime_err = float(contents[1])
-    value = float(contents[2])
-    value_err = float(contents[3])
-    #if was calculated using pax_v6.2.0 or younger
-#    if unixtime < 1478000000 or (unixtime > 1484900000 and unixtime < 1486100000):
-    if unixtime < 1478000000:
-        print(unixtime, value, value_err, *CorrectForPaxVersion(value, value_err))
-        value, value_err = CorrectForPaxVersion(value, value_err)
-    RnUnixtimes.append(unixtime)
-    RnUnixtimeErrors.append(unixtime_err)
-    RnELifeValues.append(value)
-    RnELifeValueErrors.append(value_err)
+RnUnixtimes, RnUnixtimeErrors, RnELifeValues, RnELifeValueErrors = LoadFitData('Rn', PathToFile=RnELifeDataFile)
 
 LastPointUnixTime = RnUnixtimes[-1]
 
@@ -105,77 +59,13 @@ ELifeValueErrors = ELifeValueErrors[:CutID]
 ####################################
 # Get Kr83m elifes 
 ####################################
-fin4 = open(Kr83ELifeDataFile)
-lines4 = fin4.readlines()
-fin4.close()
-#print(lines4)
-
-KrUnixtimes = []
-KrUnixtimeErrors = []
-KrELifeValues = []
-KrELifeValueErrors = []
-
-for i, line4 in enumerate(lines4):
-    contents = line4[:-1].split(" ")
-    unixtime = float(contents[0])
-    value = float(contents[1])
-    value_err = float(contents[2])
-    KrUnixtimes.append(unixtime)
-    KrUnixtimeErrors.append(0)
-    KrELifeValues.append(value)
-    KrELifeValueErrors.append(value_err)
-
+KrUnixtimes, KrUnixtimeErrors, KrELifeValues, KrELifeValueErrors = LoadFitData('Kr83', PathToFile=Kr83ELifeDataFile)
 
 ####################################
-# Get Xe129m elifes 
+# Get Xe129m/Xe131m elifes 
 ####################################
-
-
-Xe129mELifeDataFile = '/home/zgreene/xenon1t/ElectronLifetime/FitData/ElectronLifetimeDataWithXe129m.txt'
-Xe131mELifeDataFile = '/home/zgreene/xenon1t/ElectronLifetime/FitData/ElectronLifetimeDataWithXe131m.txt'
-fin5 = open(Xe129mELifeDataFile)
-lines5 = fin5.readlines()
-fin5.close()
-
-Xe129mUnixtimes = []
-Xe129mUnixtimeErrors = []
-Xe129mELifeValues = []
-Xe129mELifeValueErrors = []
-
-for i, line5 in enumerate(lines5):
-    contents = line5[:-1].split("\t\t")
-    unixtime = float(contents[0])
-    unixtime_err = float(contents[1])
-    value = float(contents[2])
-    value_err = float(contents[3])
-    Xe129mUnixtimes.append(unixtime)
-    Xe129mUnixtimeErrors.append(unixtime_err)
-    Xe129mELifeValues.append(value)
-    Xe129mELifeValueErrors.append(value_err)
-
-
-####################################
-# Get Xe131m elifes 
-####################################
-fin6 = open(Xe131mELifeDataFile)
-lines6 = fin6.readlines()
-fin6.close()
-
-Xe131mUnixtimes = []
-Xe131mUnixtimeErrors = []
-Xe131mELifeValues = []
-Xe131mELifeValueErrors = []
-
-for i, line6 in enumerate(lines6):
-    contents = line6[:-1].split("\t\t")
-    unixtime = float(contents[0])
-    unixtime_err = float(contents[1])
-    value = float(contents[2])
-    value_err = float(contents[3])
-    Xe131mUnixtimes.append(unixtime)
-    Xe131mUnixtimeErrors.append(unixtime_err)
-    Xe131mELifeValues.append(value)
-    Xe131mELifeValueErrors.append(value_err)
+Xe129mUnixtimes, Xe129mUnixtimeErrors, Xe129mELifeValues, Xe129mELifeValueErrors = LoadFitData('Xe129', PathToFile=Xe129mELifeDataFile)
+Xe131mUnixtimes, Xe131mUnixtimeErrors, Xe131mELifeValues, Xe131mELifeValueErrors = LoadFitData('Xe131', PathToFile=Xe131mELifeDataFile)
 
 #######################################
 ## Get the prediction lists
@@ -305,7 +195,7 @@ Dates2 = [dt.datetime.fromtimestamp(ts) for ts in UnixTimes2]
 from matplotlib import gridspec
 
 XLimLow = dt.datetime.fromtimestamp(FirstPointUnixTime)
-XLimLow = dt.datetime.fromtimestamp(1485802500)
+#XLimLow = dt.datetime.fromtimestamp(1485802500)
 XLimUp = dt.datetime.fromtimestamp(LastPointUnixTime+DaysAfterLastPoint*3600.*24.)
 
 
@@ -464,8 +354,8 @@ ax.text( dt.datetime.fromtimestamp(1475700000), 580+20, "$\sim$ 54 SLPM", size=2
 #XLimLow = datetime.datetime(2016, 11, 17, 0, 0)
 #XLimUp = datetime.datetime(2017, 1, 22, 0, 0)
 ax.set_xlim([XLimLow, XLimUp])
-#ax.set_ylim([0, 650])
-ax.set_ylim([400, 650])
+ax.set_ylim([0, 650])
+#ax.set_ylim([400, 650])
 #ax.set_ylim([300, 550])
 ax.legend(loc = 'lower right',prop={'size':20})
 ax.set_xlabel('Date', fontsize=30)
