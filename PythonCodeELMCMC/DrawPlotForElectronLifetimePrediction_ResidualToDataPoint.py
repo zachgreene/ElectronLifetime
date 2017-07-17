@@ -184,8 +184,10 @@ for i, line in enumerate(lines2):
     PredictedELifes.append(elife)
     PredictedELifeLowers.append(elife_lower)
     PredictedELifeUppers.append(elife_upper)
-    PredictedELifeLowerErrors.append( (elife_lower - elife)/elife)
-    PredictedELifeUpperErrors.append((elife_upper - elife)/elife)
+#    PredictedELifeLowerErrors.append( (elife_lower - elife)/elife)
+#    PredictedELifeUpperErrors.append((elife_upper - elife)/elife)
+    PredictedELifeLowerErrors.append( (elife_lower - elife))
+    PredictedELifeUpperErrors.append((elife_upper - elife))
 #    UnixTimes2.append(unixtime)
 #    PredictedELifes.append( SimpleCorrection(elife, FitterUsedS1ExponentialConstant, S1ExponentialConstant) )
 #    PredictedELifeLowers.append(SimpleCorrection(elife_lower, FitterUsedS1ExponentialConstant, S1ExponentialConstant) )
@@ -211,6 +213,8 @@ for unixtime, elife, elife_err in zip(UnixTimes, ELifeValues, ELifeValueErrors):
     ELifeValueDeviationErrors.append( elife_err / prediction * 100.)
 for unixtime, elife,elife_err in zip(RnUnixtimes, RnELifeValues, RnELifeValueErrors):
 #    if unixtime > 1484761892:
+#        continue
+#    if unixtime > 1484731512 + 16*24*3600.:
 #        continue
     prediction = PredictionInterpolator(unixtime)
     residual = elife - prediction
@@ -289,8 +293,10 @@ Dates2 = [dt.datetime.fromtimestamp(ts) for ts in UnixTimes2]
 ##############################
 from matplotlib import gridspec
 
-XLimLow = dt.datetime.fromtimestamp(FirstPointUnixTime)
-XLimUp = dt.datetime.fromtimestamp(LastPointUnixTime+DaysAfterLastPoint*3600.*24.)
+#XLimLow = dt.datetime.fromtimestamp(FirstPointUnixTime)
+#XLimUp = dt.datetime.fromtimestamp(LastPointUnixTime+DaysAfterLastPoint*3600.*24.)
+XLimLow = dt.datetime.fromtimestamp(ScienceRunStartUnixtime - 5.*24.*3600)
+XLimUp = dt.datetime.fromtimestamp(ScienceRunEndUnixtime + 5.*24.*3600)
 
 
 fig = plt.figure(figsize=(25.0, 21.0))
@@ -304,9 +310,10 @@ ax.set_xticklabels([])
 
 xfmt = md.DateFormatter('%Y-%m-%d')
 ax.xaxis.set_major_formatter(xfmt)
-ax.errorbar(Dates, ELifeValues, xerr=[DateErrorLowers,DateErrorUppers], yerr=[ELifeValueErrors,ELifeValueErrors], fmt='o', color='k', label="electron lifetime data points (S2/S1 method)")
-ax.errorbar(RnDates, RnELifeValues,  xerr = [RnDateErrorLowers,RnDateErrorUppers], yerr=[RnELifeValueErrors,RnELifeValueErrors], fmt='o', color='deeppink', label="electron lifetime data points (from Rn analysis)")
-ax.errorbar(KrDates, KrELifeValues, yerr = [KrELifeValueErrors, KrELifeValueErrors], fmt = 'o', color = 'g', label = "electron lifetime data points(from Kr83m analysis)")
+#ax.errorbar(Dates, ELifeValues, xerr=[DateErrorLowers,DateErrorUppers], yerr=[ELifeValueErrors,ELifeValueErrors], fmt='o', color='k', label="electron lifetime data points (S2/S1 method)")
+#ax.errorbar(RnDates, RnELifeValues,  xerr = [RnDateErrorLowers,RnDateErrorUppers], yerr=[RnELifeValueErrors,RnELifeValueErrors], fmt='o', color='deeppink', label="electron lifetime data points (from Rn analysis)")
+ax.errorbar(RnDates, RnELifeValues,  xerr = [RnDateErrorLowers,RnDateErrorUppers], yerr=[RnELifeValueErrors,RnELifeValueErrors], fmt='o', color='deeppink', label="electron lifetime data (from Rn analysis)")
+#ax.errorbar(KrDates, KrELifeValues, yerr = [KrELifeValueErrors, KrELifeValueErrors], fmt = 'o', color = 'g', label = "electron lifetime data points(from Kr83m analysis)")
 ax.plot(
             Dates2,
             PredictedELifes,
@@ -347,6 +354,22 @@ ax.axvline( x=dt.datetime.fromtimestamp(1484731512), # earthquake
                     color='k',
                    )
 
+ax.axvline( x=dt.datetime.fromtimestamp(1479682633+18*3600.), # power glitch
+                    ymin = 0,
+                    ymax = 650, 
+                    linestyle = "--",
+                    linewidth=3,
+                    color='k',
+                   )
+
+ax.axvline( x=dt.datetime.fromtimestamp(1482168546), # Rn220 source injection
+                    ymin = 0,
+                    ymax = 650, 
+                    linestyle = "--",
+                    linewidth=3,
+                    color='k',
+                   )
+
 
 
 # fill the region
@@ -354,8 +377,10 @@ Xs = [
           dt.datetime.fromtimestamp(1471880000),
           dt.datetime.fromtimestamp(1472800000)
          ]
-YLs = [0, 0]
-YUs = [650, 650]
+#YLs = [0, 0]
+YLs = [300, 300]
+#YUs = [650, 650]
+YUs = [550, 550]
 ax.fill_between(Xs, YLs, YUs, color='coral', alpha=0.7)
 Xs = [
           dt.datetime.fromtimestamp(1475180000),
@@ -392,13 +417,40 @@ ax.text( # LN2 test, PTR warm up
             rotation='vertical',
             )
 ax.text( # Earthquake @ 01/18/2017
-            dt.datetime.fromtimestamp(1484731512+2.*3600.*24.), 
-            450., 
-            'Earthquake @ 01/18/17',
+#            dt.datetime.fromtimestamp(1484731512+2.*3600.*24.), 
+            dt.datetime.fromtimestamp(1484731512+0.5*3600.*24.), 
+            400., 
+#            'Earthquake @ 01/18/17',
+            'Earthquake',
             color='k',
-            size=22.,
+#            size=22.,
+            size=28.,
             rotation='vertical',
             )
+
+ax.text( # Power glitch
+#            dt.datetime.fromtimestamp(1479682633+1.5*3600.*24.), 
+            dt.datetime.fromtimestamp(1479682633+1.2*3600.*24.), 
+            520., 
+            'Power glitch',
+            color='k',
+#            size=22.,
+            size=28.,
+            rotation='vertical',
+            )
+
+
+ax.text( # Rn220 source injection
+#            dt.datetime.fromtimestamp(1482070258+2.*3600.*24.), 
+            dt.datetime.fromtimestamp(1482168546+0.3*3600.*24.), 
+            414., 
+            'Rn220 source injection',
+            color='k',
+#            size=22.,
+            size=28.,
+            rotation='vertical',
+            )
+
 ax.text( # Gas-only circulation
             dt.datetime.fromtimestamp(1471880000-5.*3600.*24.), 
             675., 
@@ -428,14 +480,16 @@ ax.text( dt.datetime.fromtimestamp(1475700000), 580+40, "$\sim$ 54 SLPM", size=2
 
 
 ax.set_xlim([XLimLow, XLimUp])
-ax.set_ylim([0, 650])
-ax.legend(loc = 'lower right',prop={'size':20})
-ax.set_xlabel('Date', fontsize=30)
-ax.set_ylabel('Electron lifetime $[\\mu s]$', fontsize=30)
-ax.tick_params(axis='x', labelsize=30)
-ax.tick_params(axis='y', labelsize=30)
+#ax.set_ylim([0, 650])
+ax.set_ylim([300, 550])
+ax.legend(loc = 'lower left',prop={'size':25})
+ax.set_xlabel('Date', fontsize=35)
+ax.set_ylabel('Electron lifetime $[\\mu s]$', fontsize=35)
+ax.tick_params(axis='x', labelsize=35)
+ax.tick_params(axis='y', labelsize=35)
 
 # for ax2
+ax2.hlines(0, min(Dates2), max(Dates2), color='deeppink')
 ax2.fill_between(
                          Dates2,
                          PredictedELifeLowerErrors,
@@ -457,7 +511,8 @@ ax2.text(
               "Science run",
               color='k',
               horizontalalignment='center',
-              size=22.
+#              size=22.
+            size=35.,
               )
 ax2.text(
               dt.datetime.fromtimestamp(0.5*( ScienceRunStartUnixtime+ScienceRunEndUnixtime )),
@@ -465,7 +520,8 @@ ax2.text(
               "RMS = "+str('%.2f' % RMSBias)+"$\%$",
               color='k',
               horizontalalignment='center',
-              size=22.
+#              size=22.
+            size=35.,
               )
 
 
@@ -485,10 +541,10 @@ ax2.errorbar(RnDates, RnELifeValueDeviations,  xerr = [RnDateErrorLowers,RnDateE
 #ax2.errorbar(RnTempDates, RnELifeValueDeviations,  xerr = [RnTempDatesLow, RnTempDatesUp], yerr=[RnELifeValueDeviationErrors,RnELifeValueDeviationErrors], fmt='o', color='deeppink')
 
 
-ax.set_xlim([XLimLow, XLimUp])
+ax2.set_xlim([XLimLow, XLimUp])
 ax2.set_ylim([-20, 20])
 ax2.set_xlabel('Date', fontsize=30)
-ax2.set_ylabel('Deviation $[\\times 100\%]$', fontsize=25)
+ax2.set_ylabel('Deviation $[\\times 100\%]$', fontsize=35)
 ax2.tick_params(axis='x', labelsize=30)
 ax2.tick_params(axis='y', labelsize=30)
 

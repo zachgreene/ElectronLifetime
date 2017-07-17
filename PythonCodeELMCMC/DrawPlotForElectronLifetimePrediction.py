@@ -1,14 +1,17 @@
 import numpy as np
 import scipy as sp
+from scipy.interpolate import interp1d
 
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.dates as md
+from matplotlib import gridspec
 import datetime as dt
 import time
 import pickle
 import sys
 from Tools import *
+import FormPars
 
 if len(sys.argv)<2:
     print("======== Syntax: =======")
@@ -38,14 +41,14 @@ Xe131mELifeDataFile = '/home/zgreene/xenon1t/ElectronLifetime/FitData/ElectronLi
 UnixTimes, UnixTimeErrors, ELifeValues, ELifeValueErrors = LoadFitData('SingleScatter', PathToFile=ELifeDataFile)
 
 FirstPointUnixTime = UnixTimes[0]
-LastPointUnixTime = UnixTimes[len(UnixTimes)-1]
+LastPointUnixtime = UnixTimes[len(UnixTimes)-1]
 
 ######################################
 ## Get Rn elife data
 ######################################
 RnUnixtimes, RnUnixtimeErrors, RnELifeValues, RnELifeValueErrors = LoadFitData('Rn', PathToFile=RnELifeDataFile)
 
-LastPointUnixTime = RnUnixtimes[-1]
+LastPointUnixtime = RnUnixtimes[-1]
 
 CutID = 0
 for i, unixtime in enumerate(UnixTimes):
@@ -70,45 +73,17 @@ Xe131mUnixtimes, Xe131mUnixtimeErrors, Xe131mELifeValues, Xe131mELifeValueErrors
 #######################################
 ## Get the prediction lists
 #######################################
-# A simple method for correction the prediction
-def SimpleCorrection(Elife, FitterUsed, Actual):
-    TrueElife = pow( 1./Elife + 1./FitterUsed - 1./Actual, -1. )
-    return TrueElife
+(PredictionUnixtimes,
+PredictedELifes,
+PredictedELifeLowers,
+PredictedELifeUppers,
+PredictedELifeLowerErrors,
+PredictedELifeUpperErrors) = LoadPredictions(PredictionFile,
+                                            LastPointUnixtime,
+                                            DaysAfterLastPoint=DaysAfterLastPoint)
 
 
-fin2 = open(PredictionFile)
-lines2 = fin2.readlines()
-fin2.close()
-
-UnixTimes2 = []
-PredictedELifes = []
-PredictedELifeLowers = []
-PredictedELifeUppers = []
-PredictedELifeLowerErrors = []
-PredictedELifeUpperErrors = []
-for i, line in enumerate(lines2):
-    contents = line[:-1].split("\t\t")
-    unixtime = float(contents[0])
-    elife = float(contents[1])
-    elife_lower = float(contents[2])
-    elife_upper = float(contents[3])
-    if unixtime>LastPointUnixTime+DaysAfterLastPoint*3600.*24.:
-        break
-    UnixTimes2.append(unixtime)
-    PredictedELifes.append(elife)
-    PredictedELifeLowers.append(elife_lower)
-    PredictedELifeUppers.append(elife_upper)
-    PredictedELifeLowerErrors.append( (elife_lower - elife)/elife)
-    PredictedELifeUpperErrors.append((elife_upper - elife)/elife)
-#    PredictedELifes.append( SimpleCorrection(elife, FitterUsedS1ExponentialConstant, S1ExponentialConstant) )
-#    PredictedELifeLowers.append(SimpleCorrection(elife_lower, FitterUsedS1ExponentialConstant, S1ExponentialConstant) )
-#    PredictedELifeUppers.append(SimpleCorrection(elife_upper, FitterUsedS1ExponentialConstant, S1ExponentialConstant) )
-#    PredictedELifeLowerErrors.append( (elife_lower - elife)/elife)
-#    PredictedELifeUpperErrors.append((elife_upper - elife)/elife)
-
-from scipy.interpolate import interp1d
-
-PredictionInterpolator = interp1d(UnixTimes2, PredictedELifes)
+PredictionInterpolator = interp1d(PredictionUnixtimes, PredictedELifes)
 
 ###################################
 ## Get the residual of the data points
@@ -140,8 +115,6 @@ ScienceRunEndUnixtime = 1484731512
 ###################################
 ## convert unixtimes to dates
 ###################################
-
-
 Dates = [dt.datetime.fromtimestamp(ts) for ts in UnixTimes]
 RnDates = [dt.datetime.fromtimestamp(ts) for ts in RnUnixtimes]
 KrDates = [dt.datetime.fromtimestamp(ts) for ts in KrUnixtimes]
@@ -184,19 +157,16 @@ for ts, ts_err in zip(Xe131mUnixtimes, Xe131mUnixtimeErrors):
 #PredictedELifeLowers = np.asarray(PredictedELifeLowers)
 #PredictedELifeUppers = np.asarray(PredictedELifeUppers)
 #Dates2 = [dt.datetime.fromtimestamp(ts) for ts in UnixTimes2[UnixTimes2 < 1484731512]]
-Dates2 = [dt.datetime.fromtimestamp(ts) for ts in UnixTimes2]
+Dates2 = [dt.datetime.fromtimestamp(ts) for ts in PredictionUnixtimes]
 #UnixtimeOther = 1484731512 + 2.5*24*3600.
-#Dates3 = [dt.datetime.fromtimestamp(ts) for ts in UnixTimes2[UnixTimes2 > UnixtimeOther]]
 
 
 ##############################
 ## Draw plot
 ##############################
-from matplotlib import gridspec
-
 XLimLow = dt.datetime.fromtimestamp(FirstPointUnixTime)
 #XLimLow = dt.datetime.fromtimestamp(1485802500)
-XLimUp = dt.datetime.fromtimestamp(LastPointUnixTime+DaysAfterLastPoint*3600.*24.)
+XLimUp = dt.datetime.fromtimestamp(LastPointUnixtime+DaysAfterLastPoint*3600.*24.)
 
 
 fig = plt.figure(figsize=(25.0, 16.0))
@@ -208,42 +178,63 @@ ax = plt.subplot(gs1[0:3,:])
 
 xfmt = md.DateFormatter('%Y-%m-%d')
 ax.xaxis.set_major_formatter(xfmt)
-ax.errorbar(Dates, ELifeValues, xerr=[DateErrorLowers,DateErrorUppers], yerr=[ELifeValueErrors,ELifeValueErrors], fmt='o', color='k', label="electron lifetime data points (S2/S1 method)")
-ax.errorbar(RnDates, RnELifeValues,  xerr = [RnDateErrorLowers,RnDateErrorUppers], yerr=[RnELifeValueErrors,RnELifeValueErrors], fmt='o', color='deeppink', label="electron lifetime data points (from Rn analysis)")
-ax.errorbar(KrDates, KrELifeValues, yerr = [KrELifeValueErrors, KrELifeValueErrors], fmt = 'o', color = 'g', label = "electron lifetime data points(from Kr83m analysis)")
-ax.errorbar(Xe129mDates, Xe129mELifeValues,  xerr = [Xe129mDateErrorLowers,Xe129mDateErrorUppers], yerr=[Xe129mELifeValueErrors,Xe129mELifeValueErrors], fmt='o', color='darkmagenta', label="electron lifetime data points (from Xe129m analysis)")
-ax.errorbar(Xe131mDates, Xe131mELifeValues,  xerr = [Xe131mDateErrorLowers,Xe131mDateErrorUppers], yerr=[Xe131mELifeValueErrors,Xe131mELifeValueErrors], fmt='o', color='darkorange', label="electron lifetime data points (from Xe131m analysis)")
-ax.plot(
-            Dates2,
-            PredictedELifes,
-            linewidth=2.,
-            color = 'r',
-            label='Best-fit trend',
-           )
-ax.fill_between(
-                         Dates2,
-                         PredictedELifeLowers,
-                         PredictedELifeUppers,
-                         color='b',
-                         label='$\pm 1 \sigma$ C.L. region',
-                         alpha=0.5,
-                        )
 
-#ax.plot(
-#            Dates3,
-#            PredictedELifes[UnixTimes2 > UnixtimeOther],
-#            linewidth=2.,
-#            color = 'r',
-#            label='Best-fit trend',
-#           )
-#ax.fill_between(
-#                         Dates3,
-#                         PredictedELifeLowers[UnixTimes2 > UnixtimeOther],
-#                         PredictedELifeUppers[UnixTimes2 > UnixtimeOther],
-#                         color='b',
-#                         label='$\pm 1 \sigma$ C.L. region',
-#                         alpha=0.5,
-#                        )
+ax.errorbar(Dates, ELifeValues, xerr=[DateErrorLowers,DateErrorUppers],
+            yerr=[ELifeValueErrors,ELifeValueErrors], fmt='o', color='k',
+            label="electron lifetime data points (S2/S1 method)")
+
+ax.errorbar(RnDates, RnELifeValues,  xerr = [RnDateErrorLowers,RnDateErrorUppers],
+            yerr=[RnELifeValueErrors,RnELifeValueErrors], fmt='o', color='deeppink',
+            label="electron lifetime data points (from Rn analysis)")
+
+ax.errorbar(KrDates, KrELifeValues, yerr = [KrELifeValueErrors, KrELifeValueErrors],
+            fmt = 'o', color = 'g', label = "electron lifetime data points(from Kr83m analysis)")
+
+ax.errorbar(Xe129mDates, Xe129mELifeValues, xerr=[Xe129mDateErrorLowers,Xe129mDateErrorUppers],
+            yerr=[Xe129mELifeValueErrors, Xe129mELifeValueErrors], fmt='o', color='darkmagenta',
+            label="electron lifetime data points (from Xe129m analysis)")
+
+ax.errorbar(Xe131mDates, Xe131mELifeValues, xerr=[Xe131mDateErrorLowers,Xe131mDateErrorUppers],
+            yerr=[Xe131mELifeValueErrors, Xe131mELifeValueErrors], fmt='o', color='darkorange',
+            label="electron lifetime data points (from Xe131m analysis)")
+
+
+CathodeVoltages = FormPars.GetCathodeVoltages()
+
+# plot times when voltage is not 0 kV, otherwise fill
+for CathodeVoltage in CathodeVoltages:
+    Dates2 = [dt.datetime.fromtimestamp(ts) for ts in PredictionUnixtimes
+                if(ts >= CathodeVoltage[0][0] and ts < CathodeVoltage[0][1])]
+
+    if CathodeVoltage[1][0] == 0 and CathodeVoltage[1][1] == 0:
+        ax.fill_between(Dates2, 0, 650, color='y', alpha=0.5, label=r'$V_{C} = 0$ kV')
+        continue
+
+    ELifesToPlot = [ELife for ts,ELife in zip(PredictionUnixtimes,PredictedELifes)
+                    if (ts >= CathodeVoltage[0][0] and ts < CathodeVoltage[0][1])]
+    ELifesLowToPlot = [ELife for ts,ELife in zip(PredictionUnixtimes,PredictedELifeLowers)
+                    if (ts >= CathodeVoltage[0][0] and ts < CathodeVoltage[0][1])]
+    ELifesUpToPlot = [ELife for ts,ELife in zip(PredictionUnixtimes,PredictedELifeUppers)
+                    if (ts >= CathodeVoltage[0][0] and ts < CathodeVoltage[0][1])]
+    ax.plot(
+                Dates2,
+#                PredictedELifes,
+                ELifesToPlot,
+                linewidth=2.,
+                color = 'r',
+                label='Best-fit trend',
+               )
+    ax.fill_between(
+                             Dates2,
+                             ELifesLowToPlot,
+                             ELifesUpToPlot,
+#                             PredictedELifeLowers,
+#                             PredictedELifeUppers,
+                             color='b',
+                             label=r'$\pm 1 \sigma$ C.L. region',
+                             alpha=0.5,
+                            )
+
 
 
 # plot the vertical lines for system change
@@ -357,7 +348,12 @@ ax.set_xlim([XLimLow, XLimUp])
 ax.set_ylim([0, 650])
 #ax.set_ylim([400, 650])
 #ax.set_ylim([300, 550])
-ax.legend(loc = 'lower right',prop={'size':20})
+from collections import OrderedDict
+
+handles, labels = plt.gca().get_legend_handles_labels()
+by_label = OrderedDict(zip(labels, handles))
+#plt.legend(by_label.values(), by_label.keys(), loc = 'lower right',prop={'size':20})
+#ax.legend(loc = 'lower right',prop={'size':20})
 ax.set_xlabel('Date', fontsize=30)
 ax.set_ylabel('Electron lifetime $[\\mu s]$', fontsize=30)
 ax.tick_params(axis='x', labelsize=30)

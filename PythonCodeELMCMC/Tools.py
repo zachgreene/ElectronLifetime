@@ -404,3 +404,72 @@ def LoadFitData(FitType, PathToFile):
     else:
         return LoadLifetimesNorm(FitType, PathToFile)
     return -1
+
+
+
+def LoadPredictions(PredictionFile, LastPointUnixtime, DaysAfterLastPoint=0):
+    fin = open(PredictionFile)
+    lines = fin.readlines()
+    fin.close()
+
+    PredicionUnixtimes = []
+    PredictedELifes = []
+    PredictedELifeLows = []
+    PredictedELifeUps = []
+    PredictedELifeLowErrs = []
+    PredictedELifeUpErrs = []
+    for i, line in enumerate(lines):
+        contents = line[:-1].split("\t\t")
+        unixtime = float(contents[0])
+        elife = float(contents[1])
+        elife_lower = float(contents[2])
+        elife_upper = float(contents[3])
+        if unixtime > LastPointUnixtime + DaysAfterLastPoint*3600.*24.:
+            break
+        PredicionUnixtimes.append(unixtime)
+        PredictedELifes.append(elife)
+        PredictedELifeLows.append(elife_lower)
+        PredictedELifeUps.append(elife_upper)
+        PredictedELifeLowErrs.append( elife_lower - elife)
+        PredictedELifeUpErrs.append(elife_upper - elife)
+#        PredictedELifeLowErrs.append( (elife_lower - elife)/elife)
+#        PredictedELifeUpErrs.append((elife_upper - elife)/elife)
+
+    return (PredicionUnixtimes,
+            PredictedELifes,
+            PredictedELifeLows,
+            PredictedELifeUps,
+            PredictedELifeLowErrs,
+            PredictedELifeUpErrs)
+
+
+def ChangeElectronLifetime(ELifes, ELifeUps, ELifeLows, ELifeUpErrs, ELifeLowErrs, ChangeVal, ChangeValErr):
+
+    NewLifetimes = []
+    NewLifetimeUps = []
+    NewLifetimeLows = []
+    NewLifetimeUpErrs = []
+    NewLifetimeLowErrs = []
+
+    for ELife, ELifeUp, ELifeLow, ELifeUpErr, ELifeLowErr in zip(
+                                        ELifes, ELifeUps, ELifeLows, ELifeUpErrs, ELifeLowErrs
+                                        ):
+
+        InverseNewLifetime = 1./ELife + ChangeVal  # as defined in GetRelationshipBetweenRnKr.py
+        InverseNewLifetimeUp = 1./ELifeUp + ChangeVal
+        InverseNewLifetimeLow = 1./ELifeLow + ChangeVal
+        InverseNewLifetimeUpErr = -((ELifeUpErr/(ELifeUp**2))**2 + ChangeValErr**2)**0.5
+        InverseNewLifetimeLowErr = ((ELifeLowErr/(ELifeLow**2))**2 + ChangeValErr**2)**0.5
+
+        NewLifetimes.append(1./InverseNewLifetime)
+        NewLifetimeUps.append(1./InverseNewLifetimeUp)
+        NewLifetimeLows.append(1./InverseNewLifetimeLow)
+        NewLifetimeUpErrs.append(InverseNewLifetimeUpErr/(InverseNewLifetimeUp**2.))
+        NewLifetimeLowErrs.append(InverseNewLifetimeLowErr/(InverseNewLifetimeLow**2.))
+
+
+    return (NewLifetimes,
+            NewLifetimeUps,
+            NewLifetimeLows,
+            NewLifetimeUpErrs,
+            NewLifetimeLowErrs)
