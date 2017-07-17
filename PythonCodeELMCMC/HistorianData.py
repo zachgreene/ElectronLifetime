@@ -215,7 +215,7 @@ class MyHistorianData:
                     # force voltage to take on value
                     if Array[1][0] == Array[1][1]:
                         value = Array[1][0]
-                        RetrunValues.append(value)
+                        ReturnValues.append(value)
                         previousValue = value
                     else:
                         if value >= Array[1][0] and value < Array[1][1]:
