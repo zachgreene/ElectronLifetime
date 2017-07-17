@@ -38,6 +38,15 @@ if len(sys.argv)<3:
 
 HistorianFile = sys.argv[1]
 FitOutput = sys.argv[2]
+ElectronLifetimeDataFile = sys.argv[3]
+RnElectronLifetimeDataFile = sys.argv[4]
+
+# pre-walking
+nwalkers = int(sys.argv[5])
+niterations = int(sys.argv[6])
+PreWalkingPickleFilename = "NoneExist"
+if len(sys.argv)>7:
+    PreWalkingPickleFilename = sys.argv[7]
 
 print('\nFitting Electron Lifetime between ' + FormPars.GetMinTimeStamp() + ' and ' + FormPars.GetMaxTimeStamp() + '\n')
 
