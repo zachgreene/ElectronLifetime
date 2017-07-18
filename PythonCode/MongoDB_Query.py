@@ -23,7 +23,7 @@ def GetUnixTime(Filename):
 # get unixtime for beginning and end of list of runs
 # accepts run names or numbers
 def GetStartStopTimes(RunNamesOrNumbers):
-    if isinstance(RunNamesOrNumbers, str):
+    if isinstance(RunNamesOrNumbers, str) or isinstance(RunNamesOrNumbers, int) or isinstance(RunNamesOrNumbers, float):
         RunNamesOrNumbers = [RunNamesOrNumbers]
     RunNamesOrNumbers = sorted(RunNamesOrNumbers)
 
@@ -105,9 +105,9 @@ def GetRunIDsFilenamesAndSourcesFromMongo(StartTimeStamp, EndTimeStamp, exclude=
         try:
             tags = [tag['name'] for tag in doc['tags']]
             tags = '.'.join(tags)
-            if ('bad' in tags) or ('messy' in tags) or ('quake' in tags) or ('SourceMoving' in tags)
+            if (('bad' in tags) or ('messy' in tags) or ('quake' in tags) or ('SourceMoving' in tags)
                 or ('trip' in tags) or ('test' in tags) or ('crash' in tags) or ('ramping' in tags)
-                or ('exception' in tags) or ('special' in tags) or ('spike' in tags):
+                or ('exception' in tags) or ('special' in tags) or ('spike' in tags)):
                 print(doc['name'] + ' has tags keyword - ',end='')
                 print(tags)
                 continue
