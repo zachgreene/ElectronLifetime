@@ -38,7 +38,10 @@ Xe131mELifeDataFile = '/home/zgreene/xenon1t/ElectronLifetime/FitData/ElectronLi
 #######################################
 ### Get single scatter elife data
 #######################################
-UnixTimes, UnixTimeErrors, ELifeValues, ELifeValueErrors = LoadFitData('SingleScatter', PathToFile=ELifeDataFile)
+(UnixTimes,
+UnixTimeErrors,
+ELifeValues,
+ELifeValueErrors) = LoadFitData('SingleScatter', PathToFile=ELifeDataFile)
 
 FirstPointUnixTime = UnixTimes[0]
 LastPointUnixtime = UnixTimes[len(UnixTimes)-1]
@@ -46,7 +49,10 @@ LastPointUnixtime = UnixTimes[len(UnixTimes)-1]
 ######################################
 ## Get Rn elife data
 ######################################
-RnUnixtimes, RnUnixtimeErrors, RnELifeValues, RnELifeValueErrors = LoadFitData('Rn', PathToFile=RnELifeDataFile)
+(RnUnixtimes,
+RnUnixtimeErrors,
+RnELifeValues,
+RnELifeValueErrors) = LoadFitData('Rn', PathToFile=RnELifeDataFile)
 
 LastPointUnixtime = RnUnixtimes[-1]
 
@@ -62,13 +68,24 @@ ELifeValueErrors = ELifeValueErrors[:CutID]
 ####################################
 # Get Kr83m elifes 
 ####################################
-KrUnixtimes, KrUnixtimeErrors, KrELifeValues, KrELifeValueErrors = LoadFitData('Kr83', PathToFile=Kr83ELifeDataFile)
+
+(KrUnixtimes,
+KrUnixtimeErrors,
+KrELifeValues,
+KrELifeValueErrors) = LoadFitData('Kr83', PathToFile=Kr83ELifeDataFile)
 
 ####################################
 # Get Xe129m/Xe131m elifes 
 ####################################
-Xe129mUnixtimes, Xe129mUnixtimeErrors, Xe129mELifeValues, Xe129mELifeValueErrors = LoadFitData('Xe129', PathToFile=Xe129mELifeDataFile)
-Xe131mUnixtimes, Xe131mUnixtimeErrors, Xe131mELifeValues, Xe131mELifeValueErrors = LoadFitData('Xe131', PathToFile=Xe131mELifeDataFile)
+(Xe129mUnixtimes,
+Xe129mUnixtimeErrors,
+Xe129mELifeValues,
+Xe129mELifeValueErrors) = LoadFitData('Xe129', PathToFile=Xe129mELifeDataFile)
+
+(Xe131mUnixtimes,
+Xe131mUnixtimeErrors,
+Xe131mELifeValues,
+Xe131mELifeValueErrors) = LoadFitData('Xe131', PathToFile=Xe131mELifeDataFile)
 
 #######################################
 ## Get the prediction lists
@@ -158,7 +175,6 @@ for ts, ts_err in zip(Xe131mUnixtimes, Xe131mUnixtimeErrors):
 #PredictedELifeUppers = np.asarray(PredictedELifeUppers)
 #Dates2 = [dt.datetime.fromtimestamp(ts) for ts in UnixTimes2[UnixTimes2 < 1484731512]]
 Dates2 = [dt.datetime.fromtimestamp(ts) for ts in PredictionUnixtimes]
-#UnixtimeOther = 1484731512 + 2.5*24*3600.
 
 
 ##############################
