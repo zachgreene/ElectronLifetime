@@ -267,17 +267,11 @@ def PercentileWithInf(Values, deviation):
     return np.percentile(NewValues, deviation_new, axis=0)
 
 
-# function to correct lifetime values found with pax_v6.2.0 and earlier
-# from https://xecluster.lngs.infn.it/dokuwiki/doku.php?id=greene:update_electron_lifetime_model
-def CorrectForPaxVersion(Lifetime, LifetimeErr):
-    # found by plotting difference in inverse lifetimes
-    LifetimeCorrectionFactor = 6.72734759404e-05
-#    LifetimeCorrectionFactorUncertainty = 9.46946770525e-07
-    LifetimeCorrectionFactorUncertainty = 1.56664061785e-06
-
+# correct previously found lifetimes that were later determined to be slightly off
+def ApplyLifetimeCorrection(Lifetime, LifetimeErr, CorrectionFactor, CorrectionFactorUncertainty):
     #idea is 1/tau_v6.2.0 - 1/tau_v6.4.0 = const_eff
-    TrueLifetime = Lifetime/(1 - LifetimeCorrectionFactor*Lifetime)
-    TrueLifetimeErr = LifetimeErr/(1. - LifetimeCorrectionFactor*Lifetime) + Lifetime/(1 - LifetimeCorrectionFactor*Lifetime)**2*(LifetimeCorrectionFactorUncertainty*Lifetime + LifetimeCorrectionFactor*LifetimeErr)
+    TrueLifetime = Lifetime/(1 - CorrectionFactor*Lifetime)
+    TrueLifetimeErr = LifetimeErr/(1. - CorrectionFactor*Lifetime) + Lifetime/(1 - CorrectionFactor*Lifetime)**2*(CorrectionFactorUncertainty*Lifetime + CorrectionFactor*LifetimeErr)
 
     return (TrueLifetime, TrueLifetimeErr)
 
@@ -360,6 +354,12 @@ def LoadLifetimesKr83(PathToFile='/home/zgreene/xenon1t/ElectronLifetime/FitData
 
 
 def LoadLifetimesNorm(FitType, PathToFile):
+    if FitType == 'PoRn':
+        #if was calculated using pax_v6.2.0 or younger
+        PaxCorrectionTime, PaxCorrection, PaxCorrectionUncertainty = FormPars.GetLifetimeCorrectionPAX()
+        # if was calculated using Rn + Po instead of separating
+        PoRnCorrectionTime, PoRnCorrection, PoRnCorrectionUncertainty = FormPars.GetPoRnCorrection()
+
     fin = open(PathToFile)
     lines = fin.readlines()
     fin.close()
@@ -378,6 +378,7 @@ def LoadLifetimesNorm(FitType, PathToFile):
         unixtime_err = float(contents[1])
         value = float(contents[2])
         value_err = float(contents[3])
+
         # account for LCE
         if FitType == 'SingleScatter':
             S1ExponentialConstant = FormPars.GetS1ExponentialConstant()
@@ -386,10 +387,16 @@ def LoadLifetimesNorm(FitType, PathToFile):
                                         np.power(value_err/ (S1ExponentialConstant - value), 2.))
             if value_err < 0.:
                 continue
-        #if was calculated using pax_v6.2.0 or younger
-        elif FitType == 'Rn' and unixtime < FormPars.GetLifetimeCorrectionPAX():
-#            print(unixtime, value, value_err, *CorrectForPaxVersion(value, value_err))
-            value, value_err = CorrectForPaxVersion(value, value_err)
+
+        elif FitType == 'PoRn':
+            if unixtime < PaxCorrectionTime:
+                value, value_err = ApplyLifetimeCorrection(value, value_err, PaxCorrection, PaxCorrectionUncertainty)
+
+            if unixtime < PoRnCorrectionTime:
+                value, value_err = ApplyLifetimeCorrection(value, value_err, PoRnCorrection, PoRnCorrectionUncertainty)
+#                print(unixtime)
+#            value, value_err = ApplyLifetimeCorrection(value, value_err, RnCorrection, RnCorrectionUncertainty)
+
         Unixtimes.append(unixtime)
         UnixtimeErrors.append(unixtime_err)
         ELifeValues.append(value)
@@ -412,12 +419,13 @@ def LoadPredictions(PredictionFile, LastPointUnixtime, DaysAfterLastPoint=0):
     lines = fin.readlines()
     fin.close()
 
-    PredicionUnixtimes = []
+    PredictionUnixtimes = []
     PredictedELifes = []
     PredictedELifeLows = []
     PredictedELifeUps = []
     PredictedELifeLowErrs = []
     PredictedELifeUpErrs = []
+
     for i, line in enumerate(lines):
         contents = line[:-1].split("\t\t")
         unixtime = float(contents[0])
@@ -426,21 +434,19 @@ def LoadPredictions(PredictionFile, LastPointUnixtime, DaysAfterLastPoint=0):
         elife_upper = float(contents[3])
         if unixtime > LastPointUnixtime + DaysAfterLastPoint*3600.*24.:
             break
-        PredicionUnixtimes.append(unixtime)
+        PredictionUnixtimes.append(unixtime)
         PredictedELifes.append(elife)
         PredictedELifeLows.append(elife_lower)
         PredictedELifeUps.append(elife_upper)
         PredictedELifeLowErrs.append( elife_lower - elife)
         PredictedELifeUpErrs.append(elife_upper - elife)
-#        PredictedELifeLowErrs.append( (elife_lower - elife)/elife)
-#        PredictedELifeUpErrs.append((elife_upper - elife)/elife)
 
-    return (PredicionUnixtimes,
-            PredictedELifes,
-            PredictedELifeLows,
-            PredictedELifeUps,
-            PredictedELifeLowErrs,
-            PredictedELifeUpErrs)
+    return (np.asarray(PredictionUnixtimes),
+            np.asarray(PredictedELifes),
+            np.asarray(PredictedELifeLows),
+            np.asarray(PredictedELifeUps),
+            np.asarray(PredictedELifeLowErrs),
+            np.asarray(PredictedELifeUpErrs))
 
 
 def ChangeElectronLifetime(ELifes, ELifeUps, ELifeLows, ELifeUpErrs, ELifeLowErrs, ChangeVal, ChangeValErr):
@@ -473,3 +479,55 @@ def ChangeElectronLifetime(ELifes, ELifeUps, ELifeLows, ELifeUpErrs, ELifeLowErr
             NewLifetimeLows,
             NewLifetimeUpErrs,
             NewLifetimeLowErrs)
+
+
+
+# get residual of data points
+def GetLifetimeDeviations(Unixtimes, ELifeValues, ELifeValueErrors, PredictionInterpolator):
+    ELifeValueDeviations = []   
+    ELifeValueDeviationErrors = []
+
+    for unixtime, elife, elife_err in zip(Unixtimes, ELifeValues, ELifeValueErrors):
+        prediction = PredictionInterpolator(unixtime)
+        residual = elife - prediction
+        ELifeValueDeviations.append(residual / prediction *100.)
+        ELifeValueDeviationErrors.append( elife_err / prediction * 100.)
+
+#    ELifeValueDeviations = np.asarray(ELifeValueDeviations)
+#    ELifeValueDeviationErrors = np.asarray(ELifeValueDeviationErrors)
+
+    return (ELifeValueDeviations, ELifeValueDeviationErrors)
+
+
+# get relative uncertainty for lifetime predictions
+def GetPredictionUncertainties(PredictionUnixtimes, PredictedELifes, PredictedELifeLowErrs, PredictedELifeUpErrs):
+    LowerFitUncertainty = []
+    UpperFitUncertainty = []
+    for unixtime, elife, elife_lower_err, elife_upper_err in zip(PredictionUnixtimes, PredictedELifes, PredictedELifeLowErrs, PredictedELifeUpErrs):
+        LowerFitUncertainty.append(elife_lower_err/elife*100.)
+        UpperFitUncertainty.append(elife_upper_err/elife*100.)
+
+    LowerFitUncertainty = np.asarray(LowerFitUncertainty)
+    UpperFitUncertainty = np.asarray(UpperFitUncertainty)
+
+    return (LowerFitUncertainty, UpperFitUncertainty)
+
+# calculate RMS and mean bias
+def GetBiases(Unixtimes, ELifeValueDeviations, **kwargs):
+    StartUnixtime = kwargs.get('StartUnixtime', min(Unixtimes))
+    EndUnixtime = kwargs.get('EndUnixtime', max(Unixtimes))
+    counter = 0
+    Sum1 = 0.
+    Sum2 = 0.
+    for unixtime, residual in zip(Unixtimes, ELifeValueDeviations):
+        if unixtime < StartUnixtime:
+            continue
+        if unixtime > EndUnixtime:
+            continue
+        Sum1 += residual
+        Sum2 += residual*residual
+        counter += 1
+    MeanBias = Sum1 / float(counter)
+    RMSBias = np.sqrt( -np.power(MeanBias, 2.) + Sum2 / float(counter) )
+
+    return (MeanBias, RMSBias)

@@ -10,6 +10,7 @@ import datetime as dt
 import time
 import pickle
 import sys
+from collections import OrderedDict
 from Tools import *
 import FormPars
 
@@ -17,7 +18,7 @@ if len(sys.argv)<2:
     print("======== Syntax: =======")
     print("python DrawPlotForElectronLifetimePrediction.py .....")
     print("< elife data txt file> ")
-    print("<Rn elife data txt file>")
+    print("<PoRn elife data txt file>")
     print("<Kr83 elife data txt file>")
     print("< prediction txt file> ")
     print("< days to show after last data point >")
@@ -25,118 +26,221 @@ if len(sys.argv)<2:
     exit()
 
 ELifeDataFile = sys.argv[1]
-RnELifeDataFile = sys.argv[2]
+PoRnELifeDataFile = sys.argv[2]
 Kr83ELifeDataFile = sys.argv[3]
 PredictionFile = sys.argv[4]
 DaysAfterLastPoint = float(sys.argv[5])
 FigureSaveName = sys.argv[6]
 
+ScienceRunUnixtimes = FormPars.GetScienceRunUnixtimes()
+
+Xe40kevELifeDataFile = '/home/zgreene/xenon1t/ElectronLifetime/FitData/ElectronLifetimeDataWithXe40keV.txt'
 Xe129mELifeDataFile = '/home/zgreene/xenon1t/ElectronLifetime/FitData/ElectronLifetimeDataWithXe129m.txt'
 Xe131mELifeDataFile = '/home/zgreene/xenon1t/ElectronLifetime/FitData/ElectronLifetimeDataWithXe131m.txt'
+Rn222ELifeDataFile = '/home/zgreene/xenon1t/ElectronLifetime/FitData/ElectronLifetimeWithRn222.txt'
+Po218ELifeDataFile = '/home/zgreene/xenon1t/ElectronLifetime/FitData/ElectronLifetimeWithPo218.txt'
+Rn220ELifeDataFile = '/home/zgreene/xenon1t/ElectronLifetime/FitData/ElectronLifetimeWithRn220.txt'
+
+ShowResiduals = False
+#ShowResiduals = True
 
 
 #######################################
-### Get single scatter elife data
+### Get elife data
 #######################################
-(UnixTimes,
-UnixTimeErrors,
-ELifeValues,
-ELifeValueErrors) = LoadFitData('SingleScatter', PathToFile=ELifeDataFile)
+(   UnixTimes,
+    UnixTimeErrors,
+    ELifeValues,
+    ELifeValueErrors) = LoadFitData('SingleScatter', PathToFile=ELifeDataFile)
+
+(   PoRnUnixtimes,
+    PoRnUnixtimeErrors,
+    PoRnELifeValues,
+    PoRnELifeValueErrors) = LoadFitData('PoRn', PathToFile=PoRnELifeDataFile)
+
+(   Rn222Unixtimes,
+    Rn222UnixtimeErrors,
+    Rn222ELifeValues,
+    Rn222ELifeValueErrors) = LoadFitData('Rn222', PathToFile=Rn222ELifeDataFile)
+
+(   Po218Unixtimes,
+    Po218UnixtimeErrors,
+    Po218ELifeValues,
+    Po218ELifeValueErrors) = LoadFitData('Po218', PathToFile=Po218ELifeDataFile)
+
+(   Rn220Unixtimes,
+    Rn220UnixtimeErrors,
+    Rn220ELifeValues,
+    Rn220ELifeValueErrors) = LoadFitData('Rn220', PathToFile=Rn220ELifeDataFile)
+
+
+(   Xe40kevUnixtimes,
+    Xe40kevUnixtimeErrors,
+    Xe40kevELifeValues,
+    Xe40kevELifeValueErrors) = LoadFitData('Xe129', PathToFile=Xe40kevELifeDataFile)
+
+(   Xe129mUnixtimes,
+    Xe129mUnixtimeErrors,
+    Xe129mELifeValues,
+    Xe129mELifeValueErrors) = LoadFitData('Xe129m', PathToFile=Xe129mELifeDataFile)
+
+
+(   Xe131mUnixtimes,
+    Xe131mUnixtimeErrors,
+    Xe131mELifeValues,
+    Xe131mELifeValueErrors) = LoadFitData('Xe131m', PathToFile=Xe131mELifeDataFile)
+
+(   KrUnixtimes,
+    KrUnixtimeErrors,
+    KrELifeValues,
+    KrELifeValueErrors) = LoadFitData('Kr83', PathToFile=Kr83ELifeDataFile)
+
 
 FirstPointUnixTime = UnixTimes[0]
 LastPointUnixtime = UnixTimes[len(UnixTimes)-1]
+LastPointUnixtime = PoRnUnixtimes[-1]
+LastPointUnixtime = Rn222Unixtimes[-1]
 
-######################################
-## Get Rn elife data
-######################################
-(RnUnixtimes,
-RnUnixtimeErrors,
-RnELifeValues,
-RnELifeValueErrors) = LoadFitData('Rn', PathToFile=RnELifeDataFile)
 
-LastPointUnixtime = RnUnixtimes[-1]
+
 
 CutID = 0
 for i, unixtime in enumerate(UnixTimes):
-    if unixtime>RnUnixtimes[0]:
+    if unixtime>PoRnUnixtimes[0]:
         CutID = i
         break
+
 UnixTimes = UnixTimes[:CutID]
 UnixTimeErrors = UnixTimeErrors[:CutID]
 ELifeValues = ELifeValues[:CutID]
 ELifeValueErrors = ELifeValueErrors[:CutID]
-####################################
-# Get Kr83m elifes 
-####################################
 
-(KrUnixtimes,
-KrUnixtimeErrors,
-KrELifeValues,
-KrELifeValueErrors) = LoadFitData('Kr83', PathToFile=Kr83ELifeDataFile)
+CutID = 0
+for i, unixtime in enumerate(PoRnUnixtimes):
+    if unixtime>Rn222Unixtimes[0]:
+        CutID = i
+        break
 
-####################################
-# Get Xe129m/Xe131m elifes 
-####################################
-(Xe129mUnixtimes,
-Xe129mUnixtimeErrors,
-Xe129mELifeValues,
-Xe129mELifeValueErrors) = LoadFitData('Xe129', PathToFile=Xe129mELifeDataFile)
+PoRnUnixtimes = PoRnUnixtimes[:CutID]
+PoRnUnixtimeErrors = PoRnUnixtimeErrors[:CutID]
+PoRnELifeValues = PoRnELifeValues[:CutID]
+PoRnELifeValueErrors = PoRnELifeValueErrors[:CutID]
 
-(Xe131mUnixtimes,
-Xe131mUnixtimeErrors,
-Xe131mELifeValues,
-Xe131mELifeValueErrors) = LoadFitData('Xe131', PathToFile=Xe131mELifeDataFile)
+
 
 #######################################
 ## Get the prediction lists
 #######################################
-(PredictionUnixtimes,
-PredictedELifes,
-PredictedELifeLowers,
-PredictedELifeUppers,
-PredictedELifeLowerErrors,
-PredictedELifeUpperErrors) = LoadPredictions(PredictionFile,
-                                            LastPointUnixtime,
-                                            DaysAfterLastPoint=DaysAfterLastPoint)
 
+(   PredictionUnixtimes,
+    PredictedELifes,
+    PredictedELifeLowers,
+    PredictedELifeUppers,
+    PredictedELifeLowerErrors,
+    PredictedELifeUpperErrors) = LoadPredictions(
+                                                    PredictionFile,
+                                                    LastPointUnixtime,
+                                                    DaysAfterLastPoint=DaysAfterLastPoint
+                                                    )
 
 PredictionInterpolator = interp1d(PredictionUnixtimes, PredictedELifes)
+
+(   LowerFitUncertainty,
+    UpperFitUncertainty) = GetPredictionUncertainties(
+                                                        PredictionUnixtimes,
+                                                        PredictedELifes,
+                                                        PredictedELifeLowerErrors,
+                                                        PredictedELifeUpperErrors
+                                                        )
+
+
+
+
 
 ###################################
 ## Get the residual of the data points
 ###################################
-ELifeValueDeviations = []
-ELifeValueDeviationErrors = []
-RnELifeValueDeviations = []
-RnELifeValueDeviationErrors = []
-for unixtime, elife, elife_err in zip(UnixTimes, ELifeValues, ELifeValueErrors):
-    prediction = PredictionInterpolator(unixtime)
-    residual = elife - prediction
-    ELifeValueDeviations.append(residual / prediction *100.)
-    ELifeValueDeviationErrors.append( elife_err / prediction * 100.)
-for unixtime, elife,elife_err in zip(RnUnixtimes, RnELifeValues, RnELifeValueErrors):
-    if unixtime > 1484761892:
-        continue
-    prediction = PredictionInterpolator(unixtime)
-    residual = elife - prediction
-    RnELifeValueDeviations.append(residual / prediction * 100.)
-    RnELifeValueDeviationErrors.append( elife_err / prediction * 100.)
+(   ELifeValueDeviations,
+    ELifeValueDeviationErrors) = GetLifetimeDeviations(
+                                                            UnixTimes,
+                                                            ELifeValues,
+                                                            ELifeValueErrors,
+                                                            PredictionInterpolator
+                                                            )
+
+(   PoRnELifeValueDeviations,
+    PoRnELifeValueDeviationErrors) = GetLifetimeDeviations(
+                                                            PoRnUnixtimes,
+                                                            PoRnELifeValues,
+                                                            PoRnELifeValueErrors,
+                                                            PredictionInterpolator
+                                                            )
+
+(   Rn222ELifeValueDeviations,
+    Rn222ELifeValueDeviationErrors) = GetLifetimeDeviations(
+                                                            Rn222Unixtimes,
+                                                            Rn222ELifeValues,
+                                                            Rn222ELifeValueErrors,
+                                                            PredictionInterpolator
+                                                            )
+
+(   Po218ELifeValueDeviations,
+    Po218ELifeValueDeviationErrors) = GetLifetimeDeviations(
+                                                            Po218Unixtimes,
+                                                            Po218ELifeValues,
+                                                            Po218ELifeValueErrors,
+                                                            PredictionInterpolator
+                                                            )
+
+(   Rn220ELifeValueDeviations,
+    Rn220ELifeValueDeviationErrors) = GetLifetimeDeviations(
+                                                            Rn220Unixtimes,
+                                                            Rn220ELifeValues,
+                                                            Rn220ELifeValueErrors,
+                                                            PredictionInterpolator
+                                                            )
+
+TotalUnixtimes = UnixTimes + PoRnUnixtimes + Rn222Unixtimes
+TotalELifeValues = ELifeValues + PoRnELifeValues + Rn222ELifeValues
+TotalELifeValueErrors = ELifeValueErrors + PoRnELifeValueErrors + Rn222ELifeValueErrors
+TotalELifeDeviations = ELifeValueDeviations + PoRnELifeValueDeviations + Rn222ELifeValueDeviations
+
+################
+### Get Biases
+################
+TotalMeanBias, TotalRMSBias = GetBiases(TotalUnixtimes, TotalELifeDeviations)
+
+SR0MeanBias, SR0RMSBias = GetBiases(TotalUnixtimes, TotalELifeDeviations,
+                                    StartUnixtime=ScienceRunUnixtimes['SR0'][0],
+                                    EndUnixtime=ScienceRunUnixtimes['SR0'][1])
+
+SR1MeanBias, SR1RMSBias = GetBiases(TotalUnixtimes, TotalELifeDeviations,
+                                    StartUnixtime=ScienceRunUnixtimes['SR1'][0],
+                                    EndUnixtime=ScienceRunUnixtimes['SR1'][1])
+
+print('Total bias: %.2f, Total RMS: %.2f' %(TotalMeanBias, TotalRMSBias))
+print('SR0 bias:   %.2f, SR0 RMS:   %.2f' %(SR0MeanBias, SR0RMSBias))
+print('SR1 bias:   %.2f, SR1 RMS:   %.2f' %(SR1MeanBias, SR1RMSBias))
+
 
 ###################################
 ## Calculate the uncertainties in the first science run
 ###################################
-ScienceRunStartUnixtime = 1479772800
-ScienceRunEndUnixtime = 1484731512
 
 
 ###################################
 ## convert unixtimes to dates
 ###################################
 Dates = [dt.datetime.fromtimestamp(ts) for ts in UnixTimes]
-RnDates = [dt.datetime.fromtimestamp(ts) for ts in RnUnixtimes]
+PoRnDates = [dt.datetime.fromtimestamp(ts) for ts in PoRnUnixtimes]
+Po218Dates = [dt.datetime.fromtimestamp(ts) for ts in Po218Unixtimes]
+Rn220Dates = [dt.datetime.fromtimestamp(ts) for ts in Rn220Unixtimes]
+Rn222Dates = [dt.datetime.fromtimestamp(ts) for ts in Rn222Unixtimes]
 KrDates = [dt.datetime.fromtimestamp(ts) for ts in KrUnixtimes]
+Xe40kevDates = [dt.datetime.fromtimestamp(ts) for ts in Xe40kevUnixtimes]
 Xe129mDates = [dt.datetime.fromtimestamp(ts) for ts in Xe129mUnixtimes]
 Xe131mDates = [dt.datetime.fromtimestamp(ts) for ts in Xe131mUnixtimes]
+
 DateErrorLowers = []
 DateErrorUppers = []
 for ts, ts_err in zip(UnixTimes, UnixTimeErrors):
@@ -145,14 +249,52 @@ for ts, ts_err in zip(UnixTimes, UnixTimeErrors):
     date_err_upper = dt.datetime.fromtimestamp(ts + ts_err) - date
     DateErrorLowers.append( date_err_lower )
     DateErrorUppers.append( date_err_upper )
-RnDateErrorLowers = []
-RnDateErrorUppers = []
-for ts, ts_err in zip(RnUnixtimes, RnUnixtimeErrors):
+
+PoRnDateErrorLowers = []
+PoRnDateErrorUppers = []
+for ts, ts_err in zip(PoRnUnixtimes, PoRnUnixtimeErrors):
     date = dt.datetime.fromtimestamp(ts)
     date_err_lower = date - dt.datetime.fromtimestamp(ts - ts_err)
     date_err_upper = dt.datetime.fromtimestamp(ts + ts_err) - date
-    RnDateErrorLowers.append( date_err_lower )
-    RnDateErrorUppers.append( date_err_upper )
+    PoRnDateErrorLowers.append( date_err_lower )
+    PoRnDateErrorUppers.append( date_err_upper )
+
+Po218DateErrorLowers = []
+Po218DateErrorUppers = []
+for ts, ts_err in zip(Po218Unixtimes, Po218UnixtimeErrors):
+    date = dt.datetime.fromtimestamp(ts)
+    date_err_lower = date - dt.datetime.fromtimestamp(ts - ts_err)
+    date_err_upper = dt.datetime.fromtimestamp(ts + ts_err) - date
+    Po218DateErrorLowers.append( date_err_lower )
+    Po218DateErrorUppers.append( date_err_upper )
+
+Rn220DateErrorLowers = []
+Rn220DateErrorUppers = []
+for ts, ts_err in zip(Rn220Unixtimes, Rn220UnixtimeErrors):
+    date = dt.datetime.fromtimestamp(ts)
+    date_err_lower = date - dt.datetime.fromtimestamp(ts - ts_err)
+    date_err_upper = dt.datetime.fromtimestamp(ts + ts_err) - date
+    Rn220DateErrorLowers.append( date_err_lower )
+    Rn220DateErrorUppers.append( date_err_upper )
+
+Rn222DateErrorLowers = []
+Rn222DateErrorUppers = []
+for ts, ts_err in zip(Rn222Unixtimes, Rn222UnixtimeErrors):
+    date = dt.datetime.fromtimestamp(ts)
+    date_err_lower = date - dt.datetime.fromtimestamp(ts - ts_err)
+    date_err_upper = dt.datetime.fromtimestamp(ts + ts_err) - date
+    Rn222DateErrorLowers.append( date_err_lower )
+    Rn222DateErrorUppers.append( date_err_upper )
+
+Xe40kevDateErrorLowers = []
+Xe40kevDateErrorUppers = []
+for ts, ts_err in zip(Xe40kevUnixtimes, Xe40kevUnixtimeErrors):
+    date = dt.datetime.fromtimestamp(ts)
+    date_err_lower = date - dt.datetime.fromtimestamp(ts - ts_err)
+    date_err_upper = dt.datetime.fromtimestamp(ts + ts_err) - date
+    Xe40kevDateErrorLowers.append( date_err_lower )
+    Xe40kevDateErrorUppers.append( date_err_upper )
+
 Xe129mDateErrorLowers = []
 Xe129mDateErrorUppers = []
 for ts, ts_err in zip(Xe129mUnixtimes, Xe129mUnixtimeErrors):
@@ -161,6 +303,7 @@ for ts, ts_err in zip(Xe129mUnixtimes, Xe129mUnixtimeErrors):
     date_err_upper = dt.datetime.fromtimestamp(ts + ts_err) - date
     Xe129mDateErrorLowers.append( date_err_lower )
     Xe129mDateErrorUppers.append( date_err_upper )
+
 Xe131mDateErrorLowers = []
 Xe131mDateErrorUppers = []
 for ts, ts_err in zip(Xe131mUnixtimes, Xe131mUnixtimeErrors):
@@ -180,9 +323,13 @@ Dates2 = [dt.datetime.fromtimestamp(ts) for ts in PredictionUnixtimes]
 ##############################
 ## Draw plot
 ##############################
+
 XLimLow = dt.datetime.fromtimestamp(FirstPointUnixTime)
+#XLimLow = dt.datetime.fromtimestamp(ScienceRunUnixtimes['SR1'][0] - 5*24.*3600)
+#XLimLow = datetime.datetime(2017, 3, 10)
 #XLimLow = dt.datetime.fromtimestamp(1485802500)
 XLimUp = dt.datetime.fromtimestamp(LastPointUnixtime+DaysAfterLastPoint*3600.*24.)
+#XLimUp = datetime.datetime(2017, 6, 10)
 
 
 fig = plt.figure(figsize=(25.0, 16.0))
@@ -190,29 +337,14 @@ fig = plt.figure(figsize=(25.0, 16.0))
 #plt.rc('font', family='serif')
 
 gs1 = gridspec.GridSpec(3,1)
-ax = plt.subplot(gs1[0:3,:])
+if ShowResiduals:
+    ax = plt.subplot(gs1[0:2,:])
+    ax2 = plt.subplot(gs1[2:3,:], sharex=ax)
+else:
+    ax = plt.subplot(gs1[0:3,:])
 
-xfmt = md.DateFormatter('%Y-%m-%d')
+xfmt = md.DateFormatter('%Y-%m-%d %H:%M')
 ax.xaxis.set_major_formatter(xfmt)
-
-ax.errorbar(Dates, ELifeValues, xerr=[DateErrorLowers,DateErrorUppers],
-            yerr=[ELifeValueErrors,ELifeValueErrors], fmt='o', color='k',
-            label="electron lifetime data points (S2/S1 method)")
-
-ax.errorbar(RnDates, RnELifeValues,  xerr = [RnDateErrorLowers,RnDateErrorUppers],
-            yerr=[RnELifeValueErrors,RnELifeValueErrors], fmt='o', color='deeppink',
-            label="electron lifetime data points (from Rn analysis)")
-
-ax.errorbar(KrDates, KrELifeValues, yerr = [KrELifeValueErrors, KrELifeValueErrors],
-            fmt = 'o', color = 'g', label = "electron lifetime data points(from Kr83m analysis)")
-
-ax.errorbar(Xe129mDates, Xe129mELifeValues, xerr=[Xe129mDateErrorLowers,Xe129mDateErrorUppers],
-            yerr=[Xe129mELifeValueErrors, Xe129mELifeValueErrors], fmt='o', color='darkmagenta',
-            label="electron lifetime data points (from Xe129m analysis)")
-
-ax.errorbar(Xe131mDates, Xe131mELifeValues, xerr=[Xe131mDateErrorLowers,Xe131mDateErrorUppers],
-            yerr=[Xe131mELifeValueErrors, Xe131mELifeValueErrors], fmt='o', color='darkorange',
-            label="electron lifetime data points (from Xe131m analysis)")
 
 
 CathodeVoltages = FormPars.GetCathodeVoltages()
@@ -223,21 +355,31 @@ for CathodeVoltage in CathodeVoltages:
                 if(ts >= CathodeVoltage[0][0] and ts < CathodeVoltage[0][1])]
 
     if CathodeVoltage[1][0] == 0 and CathodeVoltage[1][1] == 0:
-        ax.fill_between(Dates2, 0, 650, color='y', alpha=0.5, label=r'$V_{C} = 0$ kV')
+#        ax.fill_between(Dates2, 0, 650, color='y', alpha=0.5, label=r'$V_{C} = 0$ kV')
         continue
 
     ELifesToPlot = [ELife for ts,ELife in zip(PredictionUnixtimes,PredictedELifes)
                     if (ts >= CathodeVoltage[0][0] and ts < CathodeVoltage[0][1])]
+
     ELifesLowToPlot = [ELife for ts,ELife in zip(PredictionUnixtimes,PredictedELifeLowers)
                     if (ts >= CathodeVoltage[0][0] and ts < CathodeVoltage[0][1])]
+
     ELifesUpToPlot = [ELife for ts,ELife in zip(PredictionUnixtimes,PredictedELifeUppers)
                     if (ts >= CathodeVoltage[0][0] and ts < CathodeVoltage[0][1])]
+
+    ELifesLowErrToPlot = [ELife for ts,ELife in zip(PredictionUnixtimes,PredictedELifeLowerErrors)
+                    if (ts >= CathodeVoltage[0][0] and ts < CathodeVoltage[0][1])]
+
+    ELifesUpErrToPlot = [ELife for ts,ELife in zip(PredictionUnixtimes,PredictedELifeUpperErrors)
+                    if (ts >= CathodeVoltage[0][0] and ts < CathodeVoltage[0][1])]
+
     ax.plot(
                 Dates2,
 #                PredictedELifes,
                 ELifesToPlot,
                 linewidth=2.,
                 color = 'r',
+#                color = 'gold',
                 label='Best-fit trend',
                )
     ax.fill_between(
@@ -247,9 +389,62 @@ for CathodeVoltage in CathodeVoltages:
 #                             PredictedELifeLowers,
 #                             PredictedELifeUppers,
                              color='b',
+#                             color='c',
                              label=r'$\pm 1 \sigma$ C.L. region',
                              alpha=0.5,
                             )
+    if ShowResiduals:
+        ax2.hlines(0, min(Dates2), max(Dates2), color='deeppink')
+        ax2.fill_between(
+                                 Dates2,
+                                 ELifesLowErrToPlot,
+                                 ELifesUpErrToPlot,
+                                 color='b',
+                                 alpha=0.5,
+                                )
+
+
+#ax.errorbar(Dates, ELifeValues, xerr=[DateErrorLowers,DateErrorUppers],
+#            yerr=[ELifeValueErrors,ELifeValueErrors], fmt='o', color='k',
+#            label="electron lifetime data points (S2/S1 method)")
+
+ax.errorbar(Xe40kevDates, Xe40kevELifeValues,  xerr = [Xe40kevDateErrorLowers,Xe40kevDateErrorUppers],
+            yerr=[Xe40kevELifeValueErrors,Xe40kevELifeValueErrors], fmt='o', color='deepskyblue',
+            marker='*', markersize=10, label='$\\rm{^{129}Xe}\,\,\, 39.6\,\, keV$')
+
+ax.errorbar(KrDates, KrELifeValues, yerr = [KrELifeValueErrors, KrELifeValueErrors],
+            fmt = 'o', color = 'g', label ='$\\rm{^{83m}Kr}\,\,\, 41.6\,\, keV$')
+
+ax.errorbar(Xe129mDates, Xe129mELifeValues,  xerr = [Xe129mDateErrorLowers,Xe129mDateErrorUppers],
+            yerr=[Xe129mELifeValueErrors,Xe129mELifeValueErrors], fmt='o', color='darkmagenta',
+            marker='*', markersize=10, label='$\\rm{^{131m}Xe}\,\,\, 163.9\,\, keV$')
+
+ax.errorbar(Xe131mDates, Xe131mELifeValues,  xerr = [Xe131mDateErrorLowers,Xe131mDateErrorUppers],
+            yerr=[Xe131mELifeValueErrors,Xe131mELifeValueErrors], fmt='o', color='darkorange',
+            marker='*', markersize=10, label='$\\rm{^{129m}Xe}\,\,\, 236.1\,\, keV$')
+
+ax.errorbar(PoRnDates, PoRnELifeValues,  xerr = [PoRnDateErrorLowers,PoRnDateErrorUppers],
+            yerr=[PoRnELifeValueErrors,PoRnELifeValueErrors], fmt='o', color='deeppink',
+            marker='v', label='$\\rm{^{218}Po}/^{222}Rn}$')
+
+ax.errorbar(Po218Dates, Po218ELifeValues,  xerr = [Po218DateErrorLowers,Po218DateErrorUppers],
+            yerr=[Po218ELifeValueErrors,Po218ELifeValueErrors], fmt='o', color='c',
+#            marker='v', markersize=8, label="Po218")
+            marker='v', markersize=8, label='$\\rm{^{222}Rn}\,\,\, 5.590\,\, MeV$')
+
+ax.errorbar(Rn222Dates, Rn222ELifeValues,  xerr = [Rn222DateErrorLowers,Rn222DateErrorUppers],
+            yerr=[Rn222ELifeValueErrors,Rn222ELifeValueErrors], fmt='o', color='gold',
+            marker='v', markersize=8, label='$\\rm{^{218}Po}\,\,\, 6.114\,\, MeV$')
+
+ax.errorbar(Rn220Dates, Rn220ELifeValues,  xerr = [Rn220DateErrorLowers,Rn220DateErrorUppers],
+            yerr=[Rn220ELifeValueErrors,Rn220ELifeValueErrors], fmt='o', color='orangered',
+            marker='v', markersize=8, label='$\\rm{^{220}Rn}\,\,\, 6.404\,\, MeV$')
+
+
+#TotalDates = [dt.datetime.fromtimestamp(ts) for ts in TotalUnixtimes]
+#ax.errorbar(TotalDates, TotalELifeValues,
+#            yerr=[TotalELifeValueErrors,TotalELifeValueErrors], fmt='o', color='r',
+#            label="all")
 
 
 
@@ -294,8 +489,8 @@ ax.fill_between(Xs, YLs, YUs, color='m', alpha=0.3)
 
 
 Xs = [
-          dt.datetime.fromtimestamp(ScienceRunStartUnixtime),
-          dt.datetime.fromtimestamp(ScienceRunEndUnixtime)
+          dt.datetime.fromtimestamp(ScienceRunUnixtimes['SR0'][0]),
+          dt.datetime.fromtimestamp(ScienceRunUnixtimes['SR0'][1])
          ]
 YLs = [0, 0]
 YUs = [650, 650]
@@ -355,34 +550,81 @@ ax.text( dt.datetime.fromtimestamp(1469500000), 580+40, "45 - 50 SLPM", size=20.
 ax.text( dt.datetime.fromtimestamp(1473500000), 580+40, "$\sim$ 40 SLPM", size=20.,color='k')
 ax.text( dt.datetime.fromtimestamp(1475700000), 580+20, "$\sim$ 54 SLPM", size=20.,color='k')
 
-#ax.grid(True)
-#XLimLow = datetime.datetime(2017, 3, 8, 0, 0)
-#XLimUp = datetime.datetime(2017, 4, 28, 0, 0)
-#XLimLow = datetime.datetime(2016, 11, 17, 0, 0)
-#XLimUp = datetime.datetime(2017, 1, 22, 0, 0)
-ax.set_xlim([XLimLow, XLimUp])
-ax.set_ylim([0, 650])
-#ax.set_ylim([400, 650])
-#ax.set_ylim([300, 550])
-from collections import OrderedDict
 
-handles, labels = plt.gca().get_legend_handles_labels()
+Dates2 = [dt.datetime.fromtimestamp(ts) for ts in PredictionUnixtimes]
+
+#ax2.hlines(0, min(Dates2), max(Dates2), color='deeppink')
+#ax2.fill_between(
+#                         Dates2,
+#                         PredictedELifeLowerErrors,
+#                         PredictedELifeUpperErrors,
+#                         color='b',
+#                         alpha=0.5,
+#                        )
+
+
+
+YLs = [-20, -20]
+YUs = [20, 20]
+if ShowResiduals:
+    ax2.fill_between(Xs, YLs, YUs, color='coral', alpha=0.5)
+#    ax2.text(
+#                  dt.datetime.fromtimestamp(0.5*( ScienceRunStartUnixtime+ScienceRunEndUnixtime )),
+#                  15,
+#                  "Science run 0",
+#                  color='k',
+#                  horizontalalignment='center',
+#                  size=22.
+#                size=35.,
+#                  )
+#    ax2.text(
+#                  dt.datetime.fromtimestamp(0.5*( ScienceRunStartUnixtime+ScienceRunEndUnixtime )),
+#                  -15,
+#                  "RMS = "+str('%.2f' % RMSBias)+"$\%$",
+#                  color='k',
+#                  horizontalalignment='center',
+#                  size=22.
+#                size=35.,
+#                  )
+
+
+    ax2.errorbar(Dates, ELifeValueDeviations, xerr=[DateErrorLowers,DateErrorUppers],
+                    yerr=[ELifeValueDeviationErrors,ELifeValueDeviationErrors], fmt='o', color='k')
+    ax2.errorbar(PoRnDates, PoRnELifeValueDeviations,  xerr=[PoRnDateErrorLowers,PoRnDateErrorUppers],
+                    yerr=[PoRnELifeValueDeviationErrors,PoRnELifeValueDeviationErrors], fmt='o', color='deeppink')
+    ax2.errorbar(Rn222Dates, Rn222ELifeValueDeviations,  xerr=[Rn222DateErrorLowers,Rn222DateErrorUppers],
+                    yerr=[Rn222ELifeValueDeviationErrors,Rn222ELifeValueDeviationErrors], fmt='o', color='gold', marker='v', markersize=8)
+
+#    ax2.set_xlim([XLimLow, XLimUp])
+#    ax2.set_ylim([-20, 20])
+    ax.set_xlabel('Date', fontsize=30)
+    ax2.set_ylim([-15, 15])
+
+
+#ax.grid(True)
+ax.set_xlim([XLimLow, XLimUp])
+ax.set_ylim([0, 680])
+#ax.set_ylim([450, 680])
+#ax.set_ylim([450, 670])
+
+handles, labels = ax.get_legend_handles_labels()
 by_label = OrderedDict(zip(labels, handles))
-#plt.legend(by_label.values(), by_label.keys(), loc = 'lower right',prop={'size':20})
+ax.legend(by_label.values(), by_label.keys(), loc = 'best',prop={'size':20}, ncol=2)
+
 #ax.legend(loc = 'lower right',prop={'size':20})
 ax.set_xlabel('Date', fontsize=30)
-ax.set_ylabel('Electron lifetime $[\\mu s]$', fontsize=30)
+ax.set_ylabel('Electron lifetime $[\\mu s]$', fontsize=20)
 ax.tick_params(axis='x', labelsize=30)
 ax.tick_params(axis='y', labelsize=30)
 
 
-
+gs1.update(hspace=0)
 
 ax.set_xlim([XLimLow, XLimUp])
 
 fig.autofmt_xdate()
 
-plt.savefig(FigureSaveName+".png", format='png')
-plt.savefig(FigureSaveName+".pdf", format='pdf')
+#plt.savefig(FigureSaveName+".png", format='png')
+#plt.savefig(FigureSaveName+".pdf", format='pdf')
 
 plt.show()

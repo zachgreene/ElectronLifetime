@@ -202,6 +202,15 @@ class MyImpurityTrend:
             self.HistorianData.AddOneGetterDeficiencyConfig(pars[14])
             self.HistorianData.AddOneGetterDeficiencyConfig(pars[15])
             self.HistorianData.AddOneGetterDeficiencyConfig(pars[16])
+        if len(pars)==18:
+            self.HistorianData.PopOneGetterDeficiencyConfig()
+            self.HistorianData.PopOneGetterDeficiencyConfig()
+            self.HistorianData.PopOneGetterDeficiencyConfig()
+            self.HistorianData.PopOneGetterDeficiencyConfig()
+            self.HistorianData.AddOneGetterDeficiencyConfig(pars[14])
+            self.HistorianData.AddOneGetterDeficiencyConfig(pars[15])
+            self.HistorianData.AddOneGetterDeficiencyConfig(pars[16])
+            self.HistorianData.AddOneGetterDeficiencyConfig(pars[17])
         if not IfSameAsPrevious:
             self.CalculateImpurityConcentration()
         return

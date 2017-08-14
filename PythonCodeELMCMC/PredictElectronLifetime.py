@@ -29,7 +29,7 @@ PredictionOutputFile = sys.argv[3]
 BurnInCutOff = int(sys.argv[4])
 
 
-NumOfInterpretation = 1000
+NumOfInterpolation = 5000
 NumOfTrials = 1000
 
 
@@ -68,7 +68,7 @@ Pars, IfSth=FormPars.FormPars(mean)
 pElectronLifetimeTrend = MyElectronLifetimeTrend(HistorianFile, MinUnixTime, MaxUnixTime, Pars)
 
 # get the graphs 
-UnixTimes = np.linspace(MinUnixTime, MaxUnixTime, NumOfInterpretation)
+UnixTimes = np.linspace(MinUnixTime, MaxUnixTime, NumOfInterpolation)
 # include times of discontinuity
 ImpactfulUnixtimes = FormPars.GetImpactfulUnixtimes()
 for ImpactfulUnixtime in ImpactfulUnixtimes:

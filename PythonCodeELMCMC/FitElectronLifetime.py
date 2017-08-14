@@ -30,16 +30,18 @@ if len(sys.argv)<3:
     print("<SC file>")
     print("<Output pickle result>")
     print("<Fit data txt>")
-    print("<Rn Fit data txt>")
+    print("<PoRn Fit data txt>")
     print("<number of walkers>")
     print("<number of iteractions>")
     print("<(optional)Input pickle pre-result>")
     exit()
 
+Rn222ELifeDataFile = '/home/zgreene/xenon1t/ElectronLifetime/FitData/ElectronLifetimeWithRn222.txt'
+
 HistorianFile = sys.argv[1]
 FitOutput = sys.argv[2]
 ElectronLifetimeDataFile = sys.argv[3]
-RnElectronLifetimeDataFile = sys.argv[4]
+PoRnElectronLifetimeDataFile = sys.argv[4]
 
 # pre-walking
 nwalkers = int(sys.argv[5])
@@ -69,37 +71,68 @@ if len(sys.argv)>7:
     PreWalkingPickleFilename = sys.argv[7]
 
 ElectronLifetimeData = {}
+
 #############################
 # fill in the data
 #############################
-
 # load eelectron lifetime data
 
-UnixTimes, UnixTimeErrors, Values, ValueErrors = LoadFitData('SingleScatter', PathToFile=ElectronLifetimeDataFile)
-RnUnixtimes, RnUnixtimeErrors, RnELifeValues, RnELifeValueErrors = LoadFitData('Rn', PathToFile=RnElectronLifetimeDataFile)
+(   UnixTimes,
+    UnixTimeErrors,
+    ELifeValues,
+    ELifeValueErrors) = LoadFitData('SingleScatter', PathToFile=ElectronLifetimeDataFile)
 
-## Load the Rn data
+(   PoRnUnixtimes,
+    PoRnUnixtimeErrors,
+    PoRnELifeValues,
+    PoRnELifeValueErrors) = LoadFitData('PoRn', PathToFile=PoRnElectronLifetimeDataFile)
 
-RnMinUnixtime = np.min(RnUnixtimes)
-# Remove values that has unixtime larger than the first one in RnUnixTimes
+(   Rn222Unixtimes,
+    Rn222UnixtimeErrors,
+    Rn222ELifeValues,
+    Rn222ELifeValueErrors) = LoadFitData('Rn222', PathToFile=Rn222ELifeDataFile)
+
+
+FirstPointUnixTime = UnixTimes[0]
+LastPointUnixtime = UnixTimes[len(UnixTimes)-1]
+
+
+
+PoRnMinUnixtime = np.min(PoRnUnixtimes)
+Rn222MinUnixtime = np.min(Rn222Unixtimes)
+# Remove values that has unixtime larger than the first one in PoRnUnixTimes
 # And then extend the list with Rn lists
 CutOffID = 0
 for i, unixtime in enumerate(UnixTimes):
-    if unixtime > RnMinUnixtime:
+    if unixtime > PoRnMinUnixtime:
         CutOffID = i
         break
 UnixTimes = UnixTimes[0:CutOffID]
-Values = Values[0:CutOffID]
-ValueErrors = ValueErrors[0:CutOffID]
-UnixTimes.extend(RnUnixtimes)
-Values.extend(RnELifeValues)
-ValueErrors.extend(RnELifeValueErrors)
+ELifeValues = ELifeValues[0:CutOffID]
+ELifeValueErrors = ELifeValueErrors[0:CutOffID]
+UnixTimes.extend(PoRnUnixtimes)
+ELifeValues.extend(PoRnELifeValues)
+ELifeValueErrors.extend(PoRnELifeValueErrors)
 
+
+i = 0
+CutOffID = 0
+for i, unixtime in enumerate(UnixTimes):
+    if unixtime > Rn222MinUnixtime:
+        CutOffID = i
+        break
+
+UnixTimes = UnixTimes[0:CutOffID]
+ELifeValues = ELifeValues[0:CutOffID]
+ELifeValueErrors = ELifeValueErrors[0:CutOffID]
+UnixTimes.extend(Rn222Unixtimes)
+ELifeValues.extend(Rn222ELifeValues)
+ELifeValueErrors.extend(Rn222ELifeValueErrors)
 
 
 ElectronLifetimeData['UnixTimes'] = UnixTimes
-ElectronLifetimeData['Values'] = Values
-ElectronLifetimeData['ValueErrors'] = ValueErrors
+ElectronLifetimeData['Values'] = ELifeValues
+ElectronLifetimeData['ValueErrors'] = ELifeValueErrors
 LastPointUnixTime = UnixTimes[len(UnixTimes)-1]
 
 for unixtime in ElectronLifetimeData['UnixTimes']:
