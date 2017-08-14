@@ -1,5 +1,6 @@
 import numpy as np
 import datetime
+
 def GetMinTimeStamp():
     return '05/17/16 00:00:00 '
 
@@ -11,30 +12,43 @@ def GetMaxTimeStamp(DaysAfterLastPoint=30):
 def GetS1ExponentialConstant():
     return 2040.6
 
-#if was calculated using pax_v6.2.0 or younger
+# function to correct lifetime values found with pax_v6.2.0 and earlier
+# from https://xecluster.lngs.infn.it/dokuwiki/doku.php?id=greene:update_electron_lifetime_model
 def GetLifetimeCorrectionPAX():
-    return 1478000000.
+    CorrectBeforeTime = 1478000000.
+    LifetimeCorrection = 6.72734759404e-05
+    LifetimeCorrectionUncertainty = 1.56664061785e-06
+
+    return (CorrectBeforeTime, LifetimeCorrection, LifetimeCorrectionUncertainty)
+
+
+# if was calculated before this time, slightly off because of PoRn combined fit
+def GetPoRnCorrection():
+    CorrectBeforeTime = 1486124188.
+    LifetimeCorrection = 2.19733154993e-05
+    LifetimeCorrectionUncertainty = 7.67416766802e-06
+
+    return (CorrectBeforeTime, LifetimeCorrection, LifetimeCorrectionUncertainty)
+
+
+def GetKrCorrection():
+    ChangeVal = -0.000144914181253
+    ChangeValErr = 1.20719462566e-05
+
+    return (ChangeVal, ChangeValErr)
+
 
 def GetCathodeVoltages():
     CathodeVoltages = [
-#            [[0, 1468447500], [10., 20.]],
-#            [[0, 1473956519], [10., 20.]],
-#            [[1468447500, 1469117220], [0, 0]],
-#            [[1469117220, 1469239500], [10., 20.]],
-#            [[1469239500, 1469455980], [0, 0]],
             [[0, 1473956519], [10., 20.]],
-#            [[1469455980, 1473956519], [10., 20.]],
             [[1473956519, 1473997763], [15., 15.]],
             [[1473997763, 1475301507], [10., 20.]],
             [[1475301507, 1475391507], [12., 12.]],
-            [[1475391507, 1484768100], [10., 20.]],
-            [[1484768100, 1484949120], [0., 0.]],
-#            [[1485445320, 1485537960], [0., 0.]],
-            [[1484949120, 1485445200], [9., 9.]],
-            [[1485445200, 1485802500], [0., 0.]],
-#            [[1485567000, 1485802500], [0., 0.]],
+            [[1475391507, 1484768041], [10., 20.]],
+            [[1484768041, 1484942279], [0., 0.]],
+            [[1484942279, 1485445141], [8., 9.]],
+            [[1485445141, 1485802500], [0., 0.]],
             [[1485802500, 1486054320], [7., 7.]],
-#            [[1486054320, int(2**32-1)], [7., 10.]]
             [[1486054320, 1487265420], [8., 8.]],
             [[1487265420, int(2**32-1)], [7., 10.]]
             ]
@@ -126,9 +140,10 @@ def GetDefaultPars():
         1000., # LXe outgassing linear decreasing constant, in days.
         [[1471880000, 1472800000, 1.]], # fraction of GXe outgassing during period
         [[1475180000, 1475680000, 0.98]], # fraction of LXe outgassing during period
-        [1480144349, 1480926700, 0.98], # periods when getter is suspected to have lowered efficiency, roughly from 11-28 to 12-06
+#        [1480144349, 1480926700, 0.98], # periods when getter is suspected to have lowered efficiency, roughly from 11-28 to 12-06
         [1480344349, 1480926700, 0.98], # periods when getter is suspected to have lowered efficiency, roughly from 11-28 to 12-06
         [1482175745 - 2.*3600., 1482351960 + 2.*3600., 0.2], # periods when getter is suspected to have lowered efficiency, roughly from 11-28 to 12-06
+        [1500336000, 1501236000, 0.98], # period when getter is suspected to have lowered efficiency, July 18-28, 2017
         ]
 
     return default_pars
@@ -138,6 +153,7 @@ def FormPars(x):
     PurityDrops = GetPurityDrops()
     NumPurityDrops = len(PurityDrops['unixtimes'])
     
+#    if len(x)<13+NumPurityDrops:
     if len(x)<13+NumPurityDrops:
     	return GetDefaultPars()
     print("x=")
@@ -157,11 +173,11 @@ def FormPars(x):
     pars[4] = x[3] # condensation attaching prob
     pars[5] = x[4] # GXe outgassing
     pars[6] = x[5] # LXe outgassing
-    print(x[6:11])
+#    print(x[6:11])
     
     for i in range(NumPurityDrops):
         pars[9][i] = x[6+i]
-        print(x[6+i], pars[9][i])
+#        print(x[6+i], pars[9][i])
     pars[10][0][2] = x[6+NumPurityDrops] # the amount of outgassing in GXe changing due to gas-only flow
     pars[11] = x[7+NumPurityDrops] # GXe outgassing exponential decreasing constant, in days.
     pars[12] = x[8+NumPurityDrops] # LXe outgassing exponential decreasing constant, in days.
@@ -169,6 +185,7 @@ def FormPars(x):
     pars[14][0][2] = x[10+NumPurityDrops] # fraction of LXe outgassing during PUR upgrade
     pars[15][2] = x[11+NumPurityDrops] # lowered efficiency
     pars[16][2] = x[12+NumPurityDrops] # lowered efficiency for Rn calibration during Christmas
+    pars[17][2] = x[13+NumPurityDrops] # lowered efficiency for end of July 2017
     
     return (pars, IfOutOfBoundary)
 
@@ -199,6 +216,7 @@ def GetInitialParametersMCMC():
         0.5,
 #		0.2,
         0.5,
+        0.5,
 		])
     x0_steps = np.array([
 #		5e3,
@@ -221,6 +239,7 @@ def GetInitialParametersMCMC():
         300.,
         300.,
         0.3,
+        0.2,
         0.2,
         0.2,
         0.2,
@@ -247,8 +266,9 @@ def GetParInfo():
                 ['$\\tau_{\Lambda_l}$', 'LXe outgassing linear constant', 'days'],
                 ['$f_l$', 'fraction of GXe outgassing during GXe-only circulation', ''],
                 ['$f_g$', 'fraction of LXe outgassing during PUR upgrade', ''],
-                ['$\\alpha_1 $', 'lowered getter efficiency, Nov. 28 - Dec. 5', ''],
-                ['$\\alpha_2 $', 'lowered getter efficiency, Dec. 19 - Dec 21', '']
+                ['$\\alpha_1 $', 'lowered getter efficiency, Nov. 28 - Dec. 5 2016', ''],
+                ['$\\alpha_2 $', 'lowered getter efficiency, Dec. 19 - Dec 21 2016', '']
+                ['$\\alpha_3 $', 'lowered getter efficiency, July 18 - July 28 2017', '']
                 ]
 
     return ParInfo
@@ -285,5 +305,7 @@ def GetImpactfulUnixtimes():
         ImpactfulUnixtimes.append(default_pars[15][1])
         ImpactfulUnixtimes.append(default_pars[16][0])
         ImpactfulUnixtimes.append(default_pars[16][1])
+        ImpactfulUnixtimes.append(default_pars[17][0])
+        ImpactfulUnixtimes.append(default_pars[17][1])
 
         return ImpactfulUnixtimes
