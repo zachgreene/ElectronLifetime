@@ -32,8 +32,13 @@ def GetPoRnCorrection():
 
 
 def GetKrCorrection():
-    ChangeVal = -0.000144914181253
-    ChangeValErr = 1.20719462566e-05
+#    ChangeVal = -0.000144914181253
+#    ChangeValErr = 1.20719462566e-05
+#    ChangeVal = -0.000134390233
+#    ChangeValErr = 0.000015843214
+    # below values are generated from correcting PoRn alphas to Kr using prediction from early July
+    ChangeVal = -0.000156713309
+    ChangeValErr = 0.000015058217
 
     return (ChangeVal, ChangeValErr)
 
@@ -129,120 +134,197 @@ def GetDefaultPars():
         5.09257628e+01, # initial LXe concentration
         4.02212420e-01, # impurity attaching prob for vaporization
         4.10390827e-01, # impurity attaching prob for condensation
-        1.90294571e+02, # GXe volume outgassing, in unit of kg/day
-        1.94252374e+02, # LXe volume outgassing, in unit of kg/day
+        [1.90294571e+02, 1000.], # GXe volume outgassing, in unit of kg/day
+        [1.94252374e+02, 1000.], # LXe volume outgassing, in unit of kg/day
         PurityDrops['unixtimes'], # time for the impurity change, after correction
             # 1496685600 from https://xenon-elog.lngs.infn.it/elog/XENON1T/484
         PurityDrops['types'],
         PurityDrops['values'],
         [[1471880000, 1472800000, -100.]],
-        1000., # GXe outgassing linear decreasing constant, in days.
-        1000., # LXe outgassing linear decreasing constant, in days.
+#        1000., # GXe outgassing linear decreasing constant, in days.
+#        1000., # LXe outgassing linear decreasing constant, in days.
         [[1471880000, 1472800000, 1.]], # fraction of GXe outgassing during period
         [[1475180000, 1475680000, 0.98]], # fraction of LXe outgassing during period
 #        [1480144349, 1480926700, 0.98], # periods when getter is suspected to have lowered efficiency, roughly from 11-28 to 12-06
         [1480344349, 1480926700, 0.98], # periods when getter is suspected to have lowered efficiency, roughly from 11-28 to 12-06
         [1482175745 - 2.*3600., 1482351960 + 2.*3600., 0.2], # periods when getter is suspected to have lowered efficiency, roughly from 11-28 to 12-06
-        [1500336000, 1501236000, 0.98], # period when getter is suspected to have lowered efficiency, July 18-28, 2017
+#        [1500336000, 1501236000, 0.98], # period when getter is suspected to have lowered efficiency, July 18-28, 2017
+        [1499731200, 1505230443, 0.98], # period when getter is suspected to have lowered efficiency, July 11-now, 2017
         ]
+
+#    PurityDrops = GetPurityDrops()
+#    default_pars = [
+#        3.7e-3, # attaching rate from literature
+#        7.12997918e+03, # initial GXe concentration
+#        5.09257628e+01, # initial LXe concentration
+#        4.02212420e-01, # impurity attaching prob for vaporization
+#        4.10390827e-01, # impurity attaching prob for condensation
+#        1.90294571e+02, # GXe volume outgassing, in unit of kg/day
+#        1.94252374e+02, # LXe volume outgassing, in unit of kg/day
+#        PurityDrops['unixtimes'], # time for the impurity change, after correction
+#            # 1496685600 from https://xenon-elog.lngs.infn.it/elog/XENON1T/484
+#        PurityDrops['types'],
+#        PurityDrops['values'],
+#        [[1471880000, 1472800000, -100.]],
+#        1000., # GXe outgassing linear decreasing constant, in days.
+#        1000., # LXe outgassing linear decreasing constant, in days.
+#        [[1471880000, 1472800000, 1.]], # fraction of GXe outgassing during period
+#        [[1475180000, 1475680000, 0.98]], # fraction of LXe outgassing during period
+##        [1480144349, 1480926700, 0.98], # periods when getter is suspected to have lowered efficiency, roughly from 11-28 to 12-06
+#        [1480344349, 1480926700, 0.98], # periods when getter is suspected to have lowered efficiency, roughly from 11-28 to 12-06
+#        [1482175745 - 2.*3600., 1482351960 + 2.*3600., 0.2], # periods when getter is suspected to have lowered efficiency, roughly from 11-28 to 12-06
+#        [1500336000, 1501236000, 0.98], # period when getter is suspected to have lowered efficiency, July 18-28, 2017
+#        ]
 
     return default_pars
 
 
+#def FormPars(x, MinUnixtime=-1, MaxUnixtime=-1):
 def FormPars(x):
+#    DaysSinceStart = 0
+#    if MinUnixtime != -1:
+#        DaysSinceStart = (MaxUnixtime - MinUnixtime) / 24. / 3600.
+#        print('unixtime')
+
     PurityDrops = GetPurityDrops()
-    NumPurityDrops = len(PurityDrops['unixtimes'])
-    
-#    if len(x)<13+NumPurityDrops:
-    if len(x)<13+NumPurityDrops:
-    	return GetDefaultPars()
-    print("x=")
-    print(x)
-    IfOutOfBoundary = False
-    for i, y in enumerate(x):
-    	if y<0 and (not i==11):
-    		IfOutOfBoundary = True
-    	if i==11 and y>0:
-    		IfOutOfBoundary = True
-    	if (i==2 or i==3 or i==15 or i==16 or i==17) and y>1:
-    		IfOutOfBoundary = True
     pars = GetDefaultPars()
+    NumPurityDrops = len(PurityDrops['unixtimes'])
+    NumGXeOutgassingTerms = len(pars[5])
+    NumLXeOutgassingTerms = len(pars[6])
+    NumOutgassingTerms = NumGXeOutgassingTerms + NumLXeOutgassingTerms
+    NumTerms = NumPurityDrops + NumOutgassingTerms
+    
+    if len(x)<13+NumPurityDrops:
+#    	return GetDefaultPars()
+        return pars
+#    print("x=")
+#    print(x)
+    IfOutOfBoundary = False
+#    print(NumTerms)
+    for i, y in enumerate(x):
+#    	if y<0 and (not i==11):
+#    		IfOutOfBoundary = True
+#    	if i==11 and y>0:
+#    		IfOutOfBoundary = True
+#    	if (i==2 or i==3 or i==15 or i==16 or i==17) and y>1:
+#    		IfOutOfBoundary = True
+#        if (i<4) and (y<0):
+#            IfOutOfBoundary = True
+#            print(1, i, y)
+#        if (i==2 or i==3 or i>=7+NumTerms) and y>1:
+#            IfOutOfBoundary = True
+#            print(2, i, y)
+#        elif (i==4) and (NumGXeOutgassingTerms > 0):
+#        elif (i>=4) and (i<(4+NumGXeOutgassingTerms)):
+#            if (i==4) and (y<0):
+#            if (y<0):
+#                IfOutOfBoundary = True
+#            if i>4 and y<DaysSinceStart: 
+#                IfOutOfBoundary = True
+#                print('gxe out')
+#                print(3, i, y)
+#        elif (NumLXeOutgassingTerms > 0):
+#        elif (i>=(4+NumGXeOutgassingTerms)) and (i<(4+NumGXeOutgassingTerms+NumLXeOutgassingTerms)):
+#            if (i==(4+NumGXeOutgassingTerms)) and (y<0):
+#            if (y<0):
+#                IfOutOfBoundary = True
+#            if (i>4+NumGXeOutgassingTerms) and y<DaysSinceStart: 
+#                IfOutOfBoundary = True
+#                print('lxe out')
+#                print(4, i, y)
+#        elif (i==(4+NumTerms)):
+#            if y>0:
+#                IfOutOfBoundary = True
+#                print(5, i, y)
+#        elif y<0:
+#            IfOutOfBoundary = True
+#            print(6, i, y)
+
+    	if y<0 and (not i==4+NumTerms):
+    		IfOutOfBoundary = True
+    	if i==4+NumTerms and y>0:
+    		IfOutOfBoundary = True
+    	if (i==2 or i==3 or i>=7+NumTerms) and y>1:
+    		IfOutOfBoundary = True
+#    pars = GetDefaultPars()
     pars[1] = x[0] # initial GXe concentration
     pars[2] = x[1] # initial LXe concentration
     pars[3] = x[2] # vaporization attaching prob
     pars[4] = x[3] # condensation attaching prob
-    pars[5] = x[4] # GXe outgassing
-    pars[6] = x[5] # LXe outgassing
+    for i in range(NumGXeOutgassingTerms):
+        pars[5][i] = x[4+i]
+    for i in range(NumLXeOutgassingTerms):
+        pars[6][i] = x[4+i+NumLXeOutgassingTerms]
+#    pars[5] = x[4] # GXe outgassing
+#    pars[6] = x[5] # LXe outgassing
 #    print(x[6:11])
-    
     for i in range(NumPurityDrops):
-        pars[9][i] = x[6+i]
+        pars[9][i] = x[4+i+NumOutgassingTerms]
 #        print(x[6+i], pars[9][i])
-    pars[10][0][2] = x[6+NumPurityDrops] # the amount of outgassing in GXe changing due to gas-only flow
-    pars[11] = x[7+NumPurityDrops] # GXe outgassing exponential decreasing constant, in days.
-    pars[12] = x[8+NumPurityDrops] # LXe outgassing exponential decreasing constant, in days.
-    pars[13][0][2] = x[9+NumPurityDrops] # fraction of GXe outgassing during gas-only circulation
-    pars[14][0][2] = x[10+NumPurityDrops] # fraction of LXe outgassing during PUR upgrade
-    pars[15][2] = x[11+NumPurityDrops] # lowered efficiency
-    pars[16][2] = x[12+NumPurityDrops] # lowered efficiency for Rn calibration during Christmas
-    pars[17][2] = x[13+NumPurityDrops] # lowered efficiency for end of July 2017
+    pars[10][0][2] = x[4+NumTerms] # the amount of outgassing in GXe changing due to gas-only flow
+#    pars[9]       = x[5+NumTerms] # GXe outgassing exponential decreasing constant, in days.
+#    pars[10]      = x[6+NumTerms] # LXe outgassing exponential decreasing constant, in days.
+    pars[11][0][2] = x[5+NumTerms] # fraction of GXe outgassing during gas-only circulation
+    pars[12][0][2] = x[6+NumTerms] # fraction of LXe outgassing during PUR upgrade
+    pars[13][2]    = x[7+NumTerms] # lowered efficiency
+    pars[14][2]    = x[8+NumTerms] # lowered efficiency for Rn calibration during Christmas
+    pars[15][2]    = x[9+NumTerms] # lowered efficiency for end of July 2017
     
     return (pars, IfOutOfBoundary)
 
 
 def GetInitialParametersMCMC():
     x0 = np.array([
-        5.82212635e+03,
-        6.55483847e+01,
-        7.04240787e-01,
-        2.20849318e-01,
-        4.09610831e+02,
-        6.34534001e+01,
-        1.00e-5,
-        3.77e-6,
-        3.77e-6,
-        1.77e-6,
-        1.77e-6,
-#		2.77e-6,
-#		2.77e-6,
-#		1.77e-6,
-        -90,
-        1000.,
-        1000.,
-        1.,
-#		0.9,
-        0.5,
-#		0.95,
-        0.5,
-#		0.2,
-        0.5,
-        0.5,
+        5.82212635e+03, # initial GXe concentration
+        6.55483847e+01, # initial LXe concentration
+        7.04240787e-01, # impuritiy attachment prob for vaporization
+        2.20849318e-01, # impuritiy attachment prob for condensation
+        4.09610831e+02, # GXe volume outgassig, in units of kg/day
+        1000.,          # GXe outgassing linear decreasing constant, in days
+#        5000.,          # GXe outgassing linear decreasing constant, in days
+        6.34534001e+01, # LXe volume outgassig, in units of kg/day
+        1000.,          # LXe outgassing linear decreasing constant, in days
+#        5000.,          # GXe outgassing linear decreasing constant, in days
+        1.00e-5,        # impurity change from power event
+        3.77e-6,        # impurity change from LN2 test July 15, 2016
+        3.77e-6,        # impurity change from power glitch Nov. 21, 2016
+        1.77e-6,        # impurity change after earthquake late January, 2017
+        1.77e-6,        # impurity change from gate washing June 5, 2017
+        -90,            # amount of GXe outgassing from gas-only flow
+                        # 1000.,
+                        # 1000.,
+        1.,             # fraction of outgassing during gas-only circulation
+        0.5,            # fraction of outgassing during PUR upgrade
+        0.5,            # lowered efficiency Nov. 28 to Dec. 6
+                        # 0.2,
+        0.5,            # lowered efficiency during Rn calibration for SR0, end of Dec. 2016
+        0.5,            # lowered efficiency for end of July 2017
 		])
     x0_steps = np.array([
-#		5e3,
-#		3e3,
-        2e3,
-#		20.,
-        30.,
-        0.2,
-#		0.3,
-        0.06,
-        150.,
-        20,
-        3e-6,
-        1e-6,
-        1e-6,
-#		1e-6,
-        2e-7,
-        2e-7,
-        30,
-        300.,
-        300.,
-        0.3,
-        0.2,
-        0.2,
-        0.2,
-        0.2,
+        2e3,  # initial GXe concentration
+        30.,  # initial LXe concentration
+        0.1,  # impuritiy attachment prob for vaporization
+        0.06, # impuritiy attachment prob for condensation
+        150., # GXe volume outgassig, in units of kg/day
+        300., # GXe outgassing linear decreasing constant, in days
+#        3000., # GXe outgassing linear decreasing constant, in days
+        20,   # LXe volume outgassig, in units of kg/day
+        300., # LXe outgassing linear decreasing constant, in days
+#        3000., # GXe outgassing linear decreasing constant, in days
+        3e-6, # impurity change from power event
+        1e-6, # impurity change from LN2 test July 15, 2016
+        1e-6, # impurity change from power glitch Nov. 21, 2016
+        2e-7, # impurity change after earthquake late January, 2017
+        2e-7, # impurity change from gate washing June 5, 2017
+        30,   # amount of GXe outgassing from gas-only flow
+              # 1000.,
+              # 1000.,
+        0.3,  # fraction of outgassing during gas-only circulation
+        0.2,  # fraction of outgassing during PUR upgrade
+        0.2,  # lowered efficiency Nov. 28 to Dec. 6
+              # 0.2,
+        0.2,  # lowered efficiency during Rn calibration for SR0, end of Dec. 2016
+        0.2,  # lowered efficiency for end of July 2017
         ])
 
     return (x0, x0_steps)
@@ -256,18 +338,22 @@ def GetParInfo():
                 ['$\epsilon_2$', '$O_2$ attach probability for GXe condensation', ''],
                 ['$\Lambda_g^0$', 'initial GXe outgassing rate', 'kg*ppb/day'],
                 ['$\Lambda_l^0$', 'initial LXe outgassing rate', 'kg*ppb/day'],
+                ['$\\tau_{\Lambda_g}$', 'GXe outgassing linear constant', 'days'],
+                ['$\\tau_{\Lambda_l}$', 'LXe outgassing linear constant', 'days'],
+                ['$\\tau_{\Lambda_g}$', 'GXe outgassing quadratic constant', 'days'],
+                ['$\\tau_{\Lambda_l}$', 'LXe outgassing quadratic constant', 'days'],
                 ['$\Delta I_1$', 'Impurity change during power event, June 14', 'mol'],
                 ['$\Delta I_2$', 'Impurity change during LN2 test, July 15', 'mol'],
                 ['$\Delta I_3$', 'Impurity change during power glitch, Nov. 21', 'mol'],
                 ['$\Delta I_4$', 'Impurity change after earthquake, late January', 'mol'],
                 ['$\Delta I_5$', 'Impurity change from gate washing, 17/06/05', 'mol'],
                 ['$\Delta \Lambda_g$', 'Decrease in GXe outgassing from GXe-only flow', 'kg*ppb/day'],
-                ['$\\tau_{\Lambda_g}$', 'GXe outgassing linear constant', 'days'],
-                ['$\\tau_{\Lambda_l}$', 'LXe outgassing linear constant', 'days'],
+#                ['$\\tau_{\Lambda_g}$', 'GXe outgassing linear constant', 'days'],
+#                ['$\\tau_{\Lambda_l}$', 'LXe outgassing linear constant', 'days'],
                 ['$f_l$', 'fraction of GXe outgassing during GXe-only circulation', ''],
                 ['$f_g$', 'fraction of LXe outgassing during PUR upgrade', ''],
                 ['$\\alpha_1 $', 'lowered getter efficiency, Nov. 28 - Dec. 5 2016', ''],
-                ['$\\alpha_2 $', 'lowered getter efficiency, Dec. 19 - Dec 21 2016', '']
+                ['$\\alpha_2 $', 'lowered getter efficiency, Dec. 19 - Dec 21 2016', ''],
                 ['$\\alpha_3 $', 'lowered getter efficiency, July 18 - July 28 2017', '']
                 ]
 
@@ -297,15 +383,15 @@ def GetImpactfulUnixtimes():
         ImpactfulUnixtimes.append(default_pars[7][4])
         ImpactfulUnixtimes.append(default_pars[10][0][0])
         ImpactfulUnixtimes.append(default_pars[10][0][1])
-        ImpactfulUnixtimes.append(default_pars[13][0][0])
-        ImpactfulUnixtimes.append(default_pars[13][0][1])
-        ImpactfulUnixtimes.append(default_pars[14][0][0])
-        ImpactfulUnixtimes.append(default_pars[14][0][1])
+        ImpactfulUnixtimes.append(default_pars[11][0][0])
+        ImpactfulUnixtimes.append(default_pars[11][0][1])
+        ImpactfulUnixtimes.append(default_pars[12][0][0])
+        ImpactfulUnixtimes.append(default_pars[12][0][1])
+        ImpactfulUnixtimes.append(default_pars[13][0])
+        ImpactfulUnixtimes.append(default_pars[13][1])
+        ImpactfulUnixtimes.append(default_pars[14][0])
+        ImpactfulUnixtimes.append(default_pars[14][1])
         ImpactfulUnixtimes.append(default_pars[15][0])
         ImpactfulUnixtimes.append(default_pars[15][1])
-        ImpactfulUnixtimes.append(default_pars[16][0])
-        ImpactfulUnixtimes.append(default_pars[16][1])
-        ImpactfulUnixtimes.append(default_pars[17][0])
-        ImpactfulUnixtimes.append(default_pars[17][1])
 
         return ImpactfulUnixtimes

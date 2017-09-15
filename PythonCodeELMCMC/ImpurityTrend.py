@@ -48,14 +48,16 @@ class MyImpurityTrend:
         self.InitialConcentrationLXe = other.InitialConcentrationLXe
         self.ImpurityAttachingProbVaporization = other.ImpurityAttachingProbVaporization
         self.ImpurityAttachingProbCondensation = other.ImpurityAttachingProbCondensation
+#        self.OutgassingRateGXe = other.OutgassingRateGXe
+#        self.OutgassingRateLXe = other.OutgassingRateLXe
         self.OutgassingRateGXe = other.OutgassingRateGXe
         self.OutgassingRateLXe = other.OutgassingRateLXe
         self.ImpurityChangingUnixTimes = other.ImpurityChangingUnixTimes
         self.ImpurityChangingTypes = other.ImpurityChangingTypes
         self.ImpurityConcentrationChanges = other.ImpurityConcentrationChanges
         self.OutgassingRateGXeChanges = other.OutgassingRateGXeChanges # [start/end changing unixtime, changing amount], assuming linear
-        self.OutgassingRateGXeDecreasingLinearConst = other.OutgassingRateGXeDecreasingLinearConst
-        self.OutgassingRateLXeDecreasingLinearConst = other.OutgassingRateLXeDecreasingLinearConst
+#        self.OutgassingRateGXeDecreasingLinearConst = other.OutgassingRateGXeDecreasingLinearConst
+#        self.OutgassingRateLXeDecreasingLinearConst = other.OutgassingRateLXeDecreasingLinearConst
         self.OutgassingRateGXeFractions = other.OutgassingRateGXeFractions
         self.OutgassingRateLXeFractions = other.OutgassingRateLXeFractions
         # [ start unixtime, linear coefficient]
@@ -130,14 +132,16 @@ class MyImpurityTrend:
         self.InitialConcentrationLXe = 100. # ppb
         self.ImpurityAttachingProbVaporization = 1. # 100%
         self.ImpurityAttachingProbCondensation = 1. # 100%
-        self.OutgassingRateGXe = 1. # kg*ppb/day
-        self.OutgassingRateLXe = 1. # kg*ppb/day
+        self.OutgassingRateGXe = [1., 0.] # kg*ppb/day
+        self.OutgassingRateLXe = [1., 0.] # kg*ppb/day
+#        self.OutgassingRateGXe = 1. # kg*ppb/day
+#        self.OutgassingRateLXe = 1. # kg*ppb/day
         self.ImpurityChangingUnixTimes = [] #
         self.ImpurityChangingTypes = [] # type 0 in gas, 1 in liquid, 2  in the backing purified gas
         self.ImpurityConcentrationChanges = [] # mol
         self.OutgassingRateGXeChanges = []
-        self.OutgassingRateGXeDecreasingLinearConst = 10000. # days
-        self.OutgassingRateLXeDecreasingLinearConst = 10000. # days
+#        self.OutgassingRateGXeDecreasingLinearConst = 10000. # days
+#        self.OutgassingRateLXeDecreasingLinearConst = 10000. # days
         self.OutgassingRateGXeFractions = []
         self.OutgassingRateLXeFractions = []
         return
@@ -167,50 +171,56 @@ class MyImpurityTrend:
             self.ImpurityAttachingProbCondensation=0
         if self.ImpurityAttachingProbCondensation>1:
             self.ImpurityAttachingProbCondensation = 1.
+#        self.OutgassingRateGXe = pars[4]
+#        if self.OutgassingRateGXe<0:
+#            self.OutgassingRateGXe=0
+#        self.OutgassingRateLXe = pars[5]
+#        if self.OutgassingRateLXe<0:
+#            self.OutgassingRateLXe=0
         self.OutgassingRateGXe = pars[4]
-        if self.OutgassingRateGXe<0:
-            self.OutgassingRateGXe=0
+        if self.OutgassingRateGXe[0]<0:
+            self.OutgassingRateGXe[0]=0
         self.OutgassingRateLXe = pars[5]
-        if self.OutgassingRateLXe<0:
-            self.OutgassingRateLXe=0
+        if self.OutgassingRateLXe[0]<0:
+            self.OutgassingRateLXe[0]=0
         self.ImpurityChangingUnixTimes = pars[6]
         self.ImpurityChangingTypes = pars[7]
         self.ImpurityConcentrationChanges = pars[8]
         self.OutgassingRateGXeChanges = pars[9]
-        self.OutgassingRateGXeDecreasingLinearConst = pars[10]
-        self.OutgassingRateLXeDecreasingLinearConst = pars[11]
+#        self.OutgassingRateGXeDecreasingLinearConst = pars[10]
+#        self.OutgassingRateLXeDecreasingLinearConst = pars[11]
 #        if self.OutgassingRateGXeDecreasingLinearConst<0.001/3600./24.:
             # cannot be less than 1ms
 #            self.OutgassingRateGXeDecreasingLinearConst = 0.001/3600./24.
 #        if self.OutgassingRateLXeDecreasingLinearConst<0.001/3600./24.:
             # cannot be less than 1ms
 #            self.OutgassingRateLXeDecreasingLinearConst = 0.001/3600./24.
-        self.OutgassingRateGXeFractions = pars[12]
-        self.OutgassingRateLXeFractions = pars[13]
+        self.OutgassingRateGXeFractions = pars[10]
+        self.OutgassingRateLXeFractions = pars[11]
+        if len(pars)==13:
+            self.HistorianData.PopOneGetterDeficiencyConfig()
+            self.HistorianData.AddOneGetterDeficiencyConfig(pars[12])
+        if len(pars)==14:
+            self.HistorianData.PopOneGetterDeficiencyConfig()
+            self.HistorianData.PopOneGetterDeficiencyConfig()
+            self.HistorianData.AddOneGetterDeficiencyConfig(pars[12])
+            self.HistorianData.AddOneGetterDeficiencyConfig(pars[13])
         if len(pars)==15:
             self.HistorianData.PopOneGetterDeficiencyConfig()
+            self.HistorianData.PopOneGetterDeficiencyConfig()
+            self.HistorianData.PopOneGetterDeficiencyConfig()
+            self.HistorianData.AddOneGetterDeficiencyConfig(pars[12])
+            self.HistorianData.AddOneGetterDeficiencyConfig(pars[13])
             self.HistorianData.AddOneGetterDeficiencyConfig(pars[14])
         if len(pars)==16:
             self.HistorianData.PopOneGetterDeficiencyConfig()
             self.HistorianData.PopOneGetterDeficiencyConfig()
+            self.HistorianData.PopOneGetterDeficiencyConfig()
+            self.HistorianData.PopOneGetterDeficiencyConfig()
+            self.HistorianData.AddOneGetterDeficiencyConfig(pars[12])
+            self.HistorianData.AddOneGetterDeficiencyConfig(pars[13])
             self.HistorianData.AddOneGetterDeficiencyConfig(pars[14])
             self.HistorianData.AddOneGetterDeficiencyConfig(pars[15])
-        if len(pars)==17:
-            self.HistorianData.PopOneGetterDeficiencyConfig()
-            self.HistorianData.PopOneGetterDeficiencyConfig()
-            self.HistorianData.PopOneGetterDeficiencyConfig()
-            self.HistorianData.AddOneGetterDeficiencyConfig(pars[14])
-            self.HistorianData.AddOneGetterDeficiencyConfig(pars[15])
-            self.HistorianData.AddOneGetterDeficiencyConfig(pars[16])
-        if len(pars)==18:
-            self.HistorianData.PopOneGetterDeficiencyConfig()
-            self.HistorianData.PopOneGetterDeficiencyConfig()
-            self.HistorianData.PopOneGetterDeficiencyConfig()
-            self.HistorianData.PopOneGetterDeficiencyConfig()
-            self.HistorianData.AddOneGetterDeficiencyConfig(pars[14])
-            self.HistorianData.AddOneGetterDeficiencyConfig(pars[15])
-            self.HistorianData.AddOneGetterDeficiencyConfig(pars[16])
-            self.HistorianData.AddOneGetterDeficiencyConfig(pars[17])
         if not IfSameAsPrevious:
             self.CalculateImpurityConcentration()
         return
@@ -221,14 +231,16 @@ class MyImpurityTrend:
                                     self.InitialConcentrationLXe,
                                     self.ImpurityAttachingProbVaporization,
                                     self.ImpurityAttachingProbCondensation,
+#                                    self.OutgassingRateGXe,
+#                                    self.OutgassingRateLXe,
                                     self.OutgassingRateGXe,
                                     self.OutgassingRateLXe,
                                     self.ImpurityChangingUnixTimes,
                                     self.ImpurityChangingTypes,
                                     self.ImpurityConcentrationChanges,
                                     self.OutgassingRateGXeChanges,
-                                    self.OutgassingRateGXeDecreasingLinearConst,
-                                    self.OutgassingRateLXeDecreasingLinearConst,
+#                                    self.OutgassingRateGXeDecreasingLinearConst,
+#                                    self.OutgassingRateLXeDecreasingLinearConst,
                                     self.OutgassingRateGXeFractions,
                                     self.OutgassingRateLXeFractions,
                                     self.HistorianData.GetGetterDeficiencyConfigs(),
@@ -259,7 +271,7 @@ class MyImpurityTrend:
                         GXeFractionMaxUnixtime = config[1]
         else: 
             GXeFractionMinUnixtime = -1
-            GXeFractionMaxUnixtime = -1
+            GXeFractionMaxUnixtime = -2# make max lower than min so never used
 
         # get global min and max for LXe outgassing fractions
         if len(self.OutgassingRateLXeFractions) > 0:
@@ -274,17 +286,25 @@ class MyImpurityTrend:
                         LXeFractionMaxUnixtime = config[1]
         else: 
             LXeFractionMinUnixtime = -1
-            LXeFractionMaxUnixtime = -1
+            LXeFractionMaxUnixtime = -2 # make max lower than min so never used
         return (GXeFractionMinUnixtime, GXeFractionMaxUnixtime, LXeFractionMinUnixtime, LXeFractionMaxUnixtime)
 
     def GetGXeOutgassingRate(self, day):
-        Rate = self.OutgassingRateGXe * (1. -  day / self.OutgassingRateGXeDecreasingLinearConst)
+#        Initial, Linear, Quadratic = self.OutgassingRateGXe[0], self.OutgassingRateGXe[1], self.OutgassingRateGXe[2]
+        Initial, Linear = self.OutgassingRateGXe[0], self.OutgassingRateGXe[1]
+#        Rate = self.OutgassingRateGXe * (1. -  day / self.OutgassingRateGXeDecreasingLinearConst)
+#        Rate = Initial * (1. -  day / Linear + (day/Quadratic)**2)
+        Rate = Initial * (1. -  day / Linear)
         if Rate <= 0:
             return 0.
         return Rate
 
     def GetLXeOutgassingRate(self, day):
-        Rate = self.OutgassingRateLXe * (1. -  day / self.OutgassingRateLXeDecreasingLinearConst)
+#        Initial, Linear, Quadratic = self.OutgassingRateLXe[0], self.OutgassingRateLXe[1], self.OutgassingRateLXe[2]
+        Initial, Linear = self.OutgassingRateLXe[0], self.OutgassingRateLXe[1]
+#        Rate = self.OutgassingRateLXe * (1. -  day / self.OutgassingRateLXeDecreasingLinearConst)
+#        Rate = Initial * (1. -  day / Linear + (day/Quadratic)**2)
+        Rate = Initial * (1. -  day / Linear)
         if Rate <= 0:
             return 0.
         return Rate
@@ -356,7 +376,12 @@ class MyImpurityTrend:
                     continue
                 elif unixtime<unixtime_end:
                     # using exponential model
-                    starting_outgassing = self.OutgassingRateGXe * (1. - (unixtime_start - self.HistorianData.GetReferenceUnixTime()) / 24. / 3600. / self.OutgassingRateGXeDecreasingLinearConst )
+#                    Initial, Linear, Quadratic = self.OutgassingRateGXe[0], self.OutgassingRateGXe[1], self.OutgassingRateGXe[2]
+                    Initial, Linear = self.OutgassingRateGXe[0], self.OutgassingRateGXe[1]
+#                    starting_outgassing = self.OutgassingRateGXe * (1. - (unixtime_start - self.HistorianData.GetReferenceUnixTime()) / 24. / 3600. / self.OutgassingRateGXeDecreasingLinearConst )
+                    starting_outgassing = Initial * (1. - (unixtime_start - self.HistorianData.GetReferenceUnixTime()) / 24. / 3600. / Linear )
+#                    starting_outgassing = Initial * (1. - (unixtime_start - self.HistorianData.GetReferenceUnixTime()) / 24. / 3600. / Linear + ((unixtime_start - self.HistorianData.GetReferenceUnixTime()) / 24. / 3600. / Quadratic)**2)
+#                    starting_outgassing = Initial * (1. + (unixtime_start - self.HistorianData.GetReferenceUnixTime()) / 24. / 3600. / Linear - ((unixtime_start - self.HistorianData.GetReferenceUnixTime()) / 24. / 3600. / Quadratic)**2)
                     if starting_outgassing<=0:
                         break
                     if starting_outgassing+change_amount <= 0:
