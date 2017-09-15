@@ -44,12 +44,19 @@ OutputPredictionFile = OutputPickleFile.split('/')[-1].split('_')[-1].split('.')
 OutputPredictionFile = '/'.join(OutputPickleFile.split('/')[:-2]) + '/TXTs/Prediction_' + OutputPredictionFile
 BurnInWalkers = str(int(NumIterations) - 200)
 
+if bPublicNode:
+    threads=16
+else:
+    threads=28
 
 EXE1 = '/home/zgreene/xenon1t/ElectronLifetime/PythonCodeELMCMC/FitElectronLifetime.py'
-ARGS1 = ' '.join([HistorianFile, OutputPickleFile, ElectronLifetimeDataFile, RnElectronLifetimeDataFile, NumWalkers, NumIterations, InputPickleFile])
+ARGS1 = ' '.join([HistorianFile, OutputPickleFile, ElectronLifetimeDataFile, RnElectronLifetimeDataFile, NumWalkers, NumIterations, InputPickleFile, str(threads)])
 
 EXE2 = '/home/zgreene/xenon1t/ElectronLifetime/PythonCodeELMCMC/PredictElectronLifetime.py'
 ARGS2 = ' '.join([HistorianFile, OutputPickleFile, OutputPredictionFile, BurnInWalkers])
+
+EXE3 =  '/home/zgreene/xenon1t/ElectronLifetime/PythonCodeELMCMC/ConvertEvolution.py'
+ARGS3 = ' '.join([RnElectronLifetimeDataFile, OutputPredictionFile])
 
 
 #print('python ' + EXE1 + ' ' + ARGS1 + '\n')
@@ -100,6 +107,7 @@ subp.call("echo '. /home/zgreene/ENV/GlobalPAXEnv.sh\n' >> " + SubmitFile, shell
 #subp.call("echo '. /home/zgreene/ENV/BatchReductionEnv.sh\n' >> " + SubmitFile, shell=True)
 subp.call("echo 'python " + EXE1 + " " + ARGS1 +"\n' >> " + SubmitFile, shell=True)
 subp.call("echo 'python " + EXE2 + " " + ARGS2 +"\n' >> " + SubmitFile, shell=True)
+subp.call("echo 'python " + EXE3 + " " + ARGS3 +"\n' >> " + SubmitFile, shell=True)
 
 
 #subp.call("python " + EXE + " " + ARGS, shell=True)

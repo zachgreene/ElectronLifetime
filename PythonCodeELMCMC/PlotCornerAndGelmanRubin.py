@@ -3,7 +3,7 @@ import pickle
 import corner
 import numpy as np
 from tqdm import tqdm
-from Tools import PrintParameterQuantilesWiki
+from MCMC_Tools import PrintParameterQuantilesWiki
 
 import matplotlib.pyplot as plt
 

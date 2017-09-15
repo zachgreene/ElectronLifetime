@@ -42,7 +42,7 @@ Po218ELifeDataFile = '/home/zgreene/xenon1t/ElectronLifetime/FitData/ElectronLif
 Rn220ELifeDataFile = '/home/zgreene/xenon1t/ElectronLifetime/FitData/ElectronLifetimeWithRn220.txt'
 
 ShowResiduals = False
-#ShowResiduals = True
+ShowResiduals = True
 
 
 #######################################
@@ -176,6 +176,14 @@ PredictionInterpolator = interp1d(PredictionUnixtimes, PredictedELifes)
                                                             PredictionInterpolator
                                                             )
 
+(   Rn220ELifeValueDeviations,
+    Rn220ELifeValueDeviationErrors) = GetLifetimeDeviations(
+                                                            Rn220Unixtimes,
+                                                            Rn220ELifeValues,
+                                                            Rn220ELifeValueErrors,
+                                                            PredictionInterpolator
+                                                            )
+
 (   Rn222ELifeValueDeviations,
     Rn222ELifeValueDeviationErrors) = GetLifetimeDeviations(
                                                             Rn222Unixtimes,
@@ -208,19 +216,17 @@ TotalELifeDeviations = ELifeValueDeviations + PoRnELifeValueDeviations + Rn222EL
 ################
 ### Get Biases
 ################
-TotalMeanBias, TotalRMSBias = GetBiases(TotalUnixtimes, TotalELifeDeviations)
+MeanBias = {}
+RMSBias = {}
+MeanBias['Total'], RMSBias['Total'] = GetBiases(TotalUnixtimes, TotalELifeDeviations)
+print('Total bias: %.2f,\t Total RMS: %.2f' %(MeanBias['Total'], RMSBias['Total']))
 
-SR0MeanBias, SR0RMSBias = GetBiases(TotalUnixtimes, TotalELifeDeviations,
-                                    StartUnixtime=ScienceRunUnixtimes['SR0'][0],
-                                    EndUnixtime=ScienceRunUnixtimes['SR0'][1])
+for ScienceRun in ScienceRunUnixtimes.keys():
+    MeanBias[ScienceRun], RMSBias[ScienceRun] = GetBiases(TotalUnixtimes, TotalELifeDeviations,
+                                                          StartUnixtime=ScienceRunUnixtimes[ScienceRun][0],
+                                                          EndUnixtime=ScienceRunUnixtimes[ScienceRun][1])
 
-SR1MeanBias, SR1RMSBias = GetBiases(TotalUnixtimes, TotalELifeDeviations,
-                                    StartUnixtime=ScienceRunUnixtimes['SR1'][0],
-                                    EndUnixtime=ScienceRunUnixtimes['SR1'][1])
-
-print('Total bias: %.2f, Total RMS: %.2f' %(TotalMeanBias, TotalRMSBias))
-print('SR0 bias:   %.2f, SR0 RMS:   %.2f' %(SR0MeanBias, SR0RMSBias))
-print('SR1 bias:   %.2f, SR1 RMS:   %.2f' %(SR1MeanBias, SR1RMSBias))
+    print(ScienceRun + 'bias:   %.2f,\t '%(MeanBias[ScienceRun]) + ScienceRun + ' RMS:   %.2f' %(RMSBias[ScienceRun]))
 
 
 ###################################
@@ -327,6 +333,7 @@ Dates2 = [dt.datetime.fromtimestamp(ts) for ts in PredictionUnixtimes]
 XLimLow = dt.datetime.fromtimestamp(FirstPointUnixTime)
 #XLimLow = dt.datetime.fromtimestamp(ScienceRunUnixtimes['SR1'][0] - 5*24.*3600)
 #XLimLow = datetime.datetime(2017, 3, 10)
+#XLimLow = datetime.datetime(2017, 5, 10)
 #XLimLow = dt.datetime.fromtimestamp(1485802500)
 XLimUp = dt.datetime.fromtimestamp(LastPointUnixtime+DaysAfterLastPoint*3600.*24.)
 #XLimUp = datetime.datetime(2017, 6, 10)
@@ -343,7 +350,8 @@ if ShowResiduals:
 else:
     ax = plt.subplot(gs1[0:3,:])
 
-xfmt = md.DateFormatter('%Y-%m-%d %H:%M')
+#xfmt = md.DateFormatter('%Y-%m-%d %H:%M')
+xfmt = md.DateFormatter('%Y-%m-%d')
 ax.xaxis.set_major_formatter(xfmt)
 
 
@@ -367,10 +375,13 @@ for CathodeVoltage in CathodeVoltages:
     ELifesUpToPlot = [ELife for ts,ELife in zip(PredictionUnixtimes,PredictedELifeUppers)
                     if (ts >= CathodeVoltage[0][0] and ts < CathodeVoltage[0][1])]
 
-    ELifesLowErrToPlot = [ELife for ts,ELife in zip(PredictionUnixtimes,PredictedELifeLowerErrors)
+#LowerFitUncertainty
+#UpperFitUncertainty
+
+    ELifesLowErrToPlot = [ELife for ts,ELife in zip(PredictionUnixtimes,LowerFitUncertainty)
                     if (ts >= CathodeVoltage[0][0] and ts < CathodeVoltage[0][1])]
 
-    ELifesUpErrToPlot = [ELife for ts,ELife in zip(PredictionUnixtimes,PredictedELifeUpperErrors)
+    ELifesUpErrToPlot = [ELife for ts,ELife in zip(PredictionUnixtimes,UpperFitUncertainty)
                     if (ts >= CathodeVoltage[0][0] and ts < CathodeVoltage[0][1])]
 
     ax.plot(
@@ -404,37 +415,36 @@ for CathodeVoltage in CathodeVoltages:
                                 )
 
 
-#ax.errorbar(Dates, ELifeValues, xerr=[DateErrorLowers,DateErrorUppers],
-#            yerr=[ELifeValueErrors,ELifeValueErrors], fmt='o', color='k',
-#            label="electron lifetime data points (S2/S1 method)")
+ax.errorbar(Dates, ELifeValues, xerr=[DateErrorLowers,DateErrorUppers],
+            yerr=[ELifeValueErrors,ELifeValueErrors], fmt='o', color='k',
+            label="S2/S1 method")
 
-ax.errorbar(Xe40kevDates, Xe40kevELifeValues,  xerr = [Xe40kevDateErrorLowers,Xe40kevDateErrorUppers],
-            yerr=[Xe40kevELifeValueErrors,Xe40kevELifeValueErrors], fmt='o', color='deepskyblue',
-            marker='*', markersize=10, label='$\\rm{^{129}Xe}\,\,\, 39.6\,\, keV$')
+#ax.errorbar(Xe40kevDates, Xe40kevELifeValues,  xerr = [Xe40kevDateErrorLowers,Xe40kevDateErrorUppers],
+#            yerr=[Xe40kevELifeValueErrors,Xe40kevELifeValueErrors], fmt='o', color='deepskyblue',
+#            marker='*', markersize=10, label='$\\rm{^{129}Xe}\,\,\, 39.6\,\, keV$')
 
-ax.errorbar(KrDates, KrELifeValues, yerr = [KrELifeValueErrors, KrELifeValueErrors],
-            fmt = 'o', color = 'g', label ='$\\rm{^{83m}Kr}\,\,\, 41.6\,\, keV$')
-
-ax.errorbar(Xe129mDates, Xe129mELifeValues,  xerr = [Xe129mDateErrorLowers,Xe129mDateErrorUppers],
-            yerr=[Xe129mELifeValueErrors,Xe129mELifeValueErrors], fmt='o', color='darkmagenta',
-            marker='*', markersize=10, label='$\\rm{^{131m}Xe}\,\,\, 163.9\,\, keV$')
-
-ax.errorbar(Xe131mDates, Xe131mELifeValues,  xerr = [Xe131mDateErrorLowers,Xe131mDateErrorUppers],
-            yerr=[Xe131mELifeValueErrors,Xe131mELifeValueErrors], fmt='o', color='darkorange',
-            marker='*', markersize=10, label='$\\rm{^{129m}Xe}\,\,\, 236.1\,\, keV$')
+#ax.errorbar(KrDates, KrELifeValues, yerr = [KrELifeValueErrors, KrELifeValueErrors],
+#            fmt = 'o', color = 'g', label ='$\\rm{^{83m}Kr}\,\,\, 41.6\,\, keV$')
+#
+#ax.errorbar(Xe129mDates, Xe129mELifeValues,  xerr = [Xe129mDateErrorLowers,Xe129mDateErrorUppers],
+#            yerr=[Xe129mELifeValueErrors,Xe129mELifeValueErrors], fmt='o', color='darkmagenta',
+#            marker='*', markersize=10, label='$\\rm{^{131m}Xe}\,\,\, 163.9\,\, keV$')
+#
+#ax.errorbar(Xe131mDates, Xe131mELifeValues,  xerr = [Xe131mDateErrorLowers,Xe131mDateErrorUppers],
+#            yerr=[Xe131mELifeValueErrors,Xe131mELifeValueErrors], fmt='o', color='darkorange',
+#            marker='*', markersize=10, label='$\\rm{^{129m}Xe}\,\,\, 236.1\,\, keV$')
 
 ax.errorbar(PoRnDates, PoRnELifeValues,  xerr = [PoRnDateErrorLowers,PoRnDateErrorUppers],
             yerr=[PoRnELifeValueErrors,PoRnELifeValueErrors], fmt='o', color='deeppink',
             marker='v', label='$\\rm{^{218}Po}/^{222}Rn}$')
 
-ax.errorbar(Po218Dates, Po218ELifeValues,  xerr = [Po218DateErrorLowers,Po218DateErrorUppers],
-            yerr=[Po218ELifeValueErrors,Po218ELifeValueErrors], fmt='o', color='c',
-#            marker='v', markersize=8, label="Po218")
-            marker='v', markersize=8, label='$\\rm{^{222}Rn}\,\,\, 5.590\,\, MeV$')
+#ax.errorbar(Po218Dates, Po218ELifeValues,  xerr = [Po218DateErrorLowers,Po218DateErrorUppers],
+#            yerr=[Po218ELifeValueErrors,Po218ELifeValueErrors], fmt='o', color='c',
+#            marker='v', markersize=8, label='$\\rm{^{218}Po}\,\,\, 6.114\,\, MeV$')
 
 ax.errorbar(Rn222Dates, Rn222ELifeValues,  xerr = [Rn222DateErrorLowers,Rn222DateErrorUppers],
             yerr=[Rn222ELifeValueErrors,Rn222ELifeValueErrors], fmt='o', color='gold',
-            marker='v', markersize=8, label='$\\rm{^{218}Po}\,\,\, 6.114\,\, MeV$')
+            marker='v', markersize=8, label='$\\rm{^{222}Rn}\,\,\, 5.590\,\, MeV$')
 
 ax.errorbar(Rn220Dates, Rn220ELifeValues,  xerr = [Rn220DateErrorLowers,Rn220DateErrorUppers],
             yerr=[Rn220ELifeValueErrors,Rn220ELifeValueErrors], fmt='o', color='orangered',
@@ -488,13 +498,14 @@ Xs = [
 ax.fill_between(Xs, YLs, YUs, color='m', alpha=0.3)
 
 
-Xs = [
-          dt.datetime.fromtimestamp(ScienceRunUnixtimes['SR0'][0]),
-          dt.datetime.fromtimestamp(ScienceRunUnixtimes['SR0'][1])
-         ]
-YLs = [0, 0]
-YUs = [650, 650]
-ax.fill_between(Xs, YLs, YUs, color='coral', alpha=0.5)
+for ScienceRun in ScienceRunUnixtimes:
+    Xs = [
+              dt.datetime.fromtimestamp(ScienceRunUnixtimes[ScienceRun][0]),
+              dt.datetime.fromtimestamp(ScienceRunUnixtimes[ScienceRun][1])
+             ]
+    YLs = [0, 0]
+    YUs = [650, 650]
+    ax.fill_between(Xs, YLs, YUs, color='coral', alpha=0.5)
 
 
 
@@ -525,7 +536,7 @@ ax.text( # LN2 test, PTR warm up
 #            )
 ax.text( # Gas-only circulation
             dt.datetime.fromtimestamp(1471880000-7.*3600.*24.), 
-            675., 
+            680., 
             'Gas-only circulation',
             color='coral',
             size=22.,
@@ -534,7 +545,7 @@ ax.text( # Gas-only circulation
 ax.text(dt.datetime.fromtimestamp(1471880000), 580+20, "20 SLPM", color='coral', size=22.)
 ax.text( # PUR upgrade
             dt.datetime.fromtimestamp(1475180000-5.*3600.*24.), 
-            660., 
+            650., 
             'PUR upgrade',
             color='m',
             size=22.,
@@ -567,25 +578,37 @@ Dates2 = [dt.datetime.fromtimestamp(ts) for ts in PredictionUnixtimes]
 YLs = [-20, -20]
 YUs = [20, 20]
 if ShowResiduals:
-    ax2.fill_between(Xs, YLs, YUs, color='coral', alpha=0.5)
-#    ax2.text(
-#                  dt.datetime.fromtimestamp(0.5*( ScienceRunStartUnixtime+ScienceRunEndUnixtime )),
-#                  15,
-#                  "Science run 0",
-#                  color='k',
-#                  horizontalalignment='center',
-#                  size=22.
-#                size=35.,
-#                  )
-#    ax2.text(
-#                  dt.datetime.fromtimestamp(0.5*( ScienceRunStartUnixtime+ScienceRunEndUnixtime )),
-#                  -15,
-#                  "RMS = "+str('%.2f' % RMSBias)+"$\%$",
-#                  color='k',
-#                  horizontalalignment='center',
-#                  size=22.
-#                size=35.,
-#                  )
+    for ScienceRun in ScienceRunUnixtimes.keys():
+        Xs = [
+                  dt.datetime.fromtimestamp(ScienceRunUnixtimes[ScienceRun][0]),
+                  dt.datetime.fromtimestamp(ScienceRunUnixtimes[ScienceRun][1])
+                 ]
+        ax2.fill_between(Xs, YLs, YUs, color='coral', alpha=0.5)
+        sr_time_end = min(time.mktime(XLimUp.timetuple()), ScienceRunUnixtimes[ScienceRun][1] )
+
+        ax2.text(
+#                    dt.datetime.fromtimestamp(0.5*( ScienceRunUnixtimes[ScienceRun][0] +
+#                                                    ScienceRunUnixtimes[ScienceRun][1] )),
+#                    0.5* (dt.datetime.fromtimestamp(ScienceRunUnixtimes[ScienceRun][1]) + dt.datetime.fromtimestamp(sr_time_end)),
+                    dt.datetime.fromtimestamp(0.5*(ScienceRunUnixtimes[ScienceRun][0] + sr_time_end)),
+                    10,
+                    'Science run %s' %ScienceRun[2:],
+                    color='k',
+                    horizontalalignment='center',
+                    size=28.
+                    #size=35.,
+                    )
+        ax2.text(
+#                    dt.datetime.fromtimestamp(0.5*( ScienceRunUnixtimes[ScienceRun][0] +
+#                                                    ScienceRunUnixtimes[ScienceRun][1] )),
+                    dt.datetime.fromtimestamp(0.5*(ScienceRunUnixtimes[ScienceRun][0] + sr_time_end)),
+                    -10,
+                    "RMS = "+str('%.2f' % RMSBias[ScienceRun])+"$\%$",
+                    color='k',
+                    horizontalalignment='center',
+                    size=28.
+                    #size=35.,
+                    )
 
 
     ax2.errorbar(Dates, ELifeValueDeviations, xerr=[DateErrorLowers,DateErrorUppers],
@@ -593,30 +616,39 @@ if ShowResiduals:
     ax2.errorbar(PoRnDates, PoRnELifeValueDeviations,  xerr=[PoRnDateErrorLowers,PoRnDateErrorUppers],
                     yerr=[PoRnELifeValueDeviationErrors,PoRnELifeValueDeviationErrors], fmt='o', color='deeppink')
     ax2.errorbar(Rn222Dates, Rn222ELifeValueDeviations,  xerr=[Rn222DateErrorLowers,Rn222DateErrorUppers],
-                    yerr=[Rn222ELifeValueDeviationErrors,Rn222ELifeValueDeviationErrors], fmt='o', color='gold', marker='v', markersize=8)
+                    yerr=[Rn222ELifeValueDeviationErrors,Rn222ELifeValueDeviationErrors], fmt='o', color='gold',
+                    marker='v', markersize=8)
+
+    ax2.errorbar(Rn220Dates, Rn220ELifeValueDeviations,  xerr=[Rn220DateErrorLowers,Rn220DateErrorUppers],
+                    yerr=[Rn220ELifeValueDeviationErrors,Rn220ELifeValueDeviationErrors], fmt='o', color='orangered',
+                    marker='v', markersize=8)
 
 #    ax2.set_xlim([XLimLow, XLimUp])
 #    ax2.set_ylim([-20, 20])
-    ax.set_xlabel('Date', fontsize=30)
+    ax2.set_xlabel('Date', fontsize=30)
+    ax2.set_ylabel('Residuals [%]', fontsize=30)
     ax2.set_ylim([-15, 15])
 
 
 #ax.grid(True)
 ax.set_xlim([XLimLow, XLimUp])
-ax.set_ylim([0, 680])
+ax.set_ylim([0, 650])
 #ax.set_ylim([450, 680])
 #ax.set_ylim([450, 670])
 
 handles, labels = ax.get_legend_handles_labels()
 by_label = OrderedDict(zip(labels, handles))
-ax.legend(by_label.values(), by_label.keys(), loc = 'best',prop={'size':20}, ncol=2)
+#ax.legend(by_label.values(), by_label.keys(), loc = 'best',prop={'size':20}, ncol=3)
+ax.legend(by_label.values(), by_label.keys(), loc = 'best',prop={'size':30}, ncol=2)
 
 #ax.legend(loc = 'lower right',prop={'size':20})
 ax.set_xlabel('Date', fontsize=30)
-ax.set_ylabel('Electron lifetime $[\\mu s]$', fontsize=20)
+ax.set_ylabel('Electron lifetime $[\\mu s]$', fontsize=30)
 ax.tick_params(axis='x', labelsize=30)
 ax.tick_params(axis='y', labelsize=30)
 
+ax2.tick_params(axis='x', labelsize=30)
+ax2.tick_params(axis='y', labelsize=30)
 
 gs1.update(hspace=0)
 
@@ -624,7 +656,7 @@ ax.set_xlim([XLimLow, XLimUp])
 
 fig.autofmt_xdate()
 
-#plt.savefig(FigureSaveName+".png", format='png')
-#plt.savefig(FigureSaveName+".pdf", format='pdf')
+plt.savefig(FigureSaveName+".png", format='png')
+plt.savefig(FigureSaveName+".pdf", format='pdf')
 
 plt.show()

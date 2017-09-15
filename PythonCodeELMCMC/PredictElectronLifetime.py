@@ -4,8 +4,8 @@ from ElectronLifetimeTrend import *
 #import MyHistorianLib
 #from MyHistorianLib import GetUnixTimeFromTimeStamp
 
-import Tools
-from Tools import *
+import MCMC_Tools
+from MCMC_Tools import *
 
 import FormPars
 
@@ -29,13 +29,13 @@ PredictionOutputFile = sys.argv[3]
 BurnInCutOff = int(sys.argv[4])
 
 
-NumOfInterpolation = 5000
+NumOfInterpolation = 1000
 NumOfTrials = 1000
 
 
 # setting the parameters
 MinUnixTime = GetUnixTimeFromTimeStamp(FormPars.GetMinTimeStamp())
-MaxUnixTime = GetUnixTimeFromTimeStamp(FormPars.GetMaxTimeStamp()) + 50*24*3600
+MaxUnixTime = GetUnixTimeFromTimeStamp(FormPars.GetMaxTimeStamp()) + 100*24*3600
 default_pars = FormPars.GetDefaultPars()
 
 
